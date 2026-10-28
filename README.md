@@ -2,6 +2,8 @@
 
 针对 iPhone 的独立、免费播放器，基于 IINA 的功能设计和部分控制逻辑，使用同源的 mpv 播放引擎。**这是独立移植项目，不是 IINA 官方发行版。**
 
+[下载最新 Release](https://github.com/chen-bliss/IINA-Mobile/releases/latest)
+
 ## 已实现
 
 ### 0.4.0 更新
