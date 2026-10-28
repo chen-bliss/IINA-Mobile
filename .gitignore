@@ -10,3 +10,9 @@ Distribution/
 work/
 Vendor/MPVKit/Artifacts/
 __pycache__/
+Build*/
+*.ipa
+*.mobileprovision
+*.p12
+*.p8
+*.xcarchive/
