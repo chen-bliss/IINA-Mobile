@@ -1,0 +1,587 @@
+[
+  {
+    "repository": "mpvkit/MPVKit",
+    "requested_ref": "d9194243bdc68b87d8989376ab52aee7da6c8e0b",
+    "status": "ok",
+    "commit": "d9194243bdc68b87d8989376ab52aee7da6c8e0b",
+    "archive": "mpvkit--MPVKit--d9194243bdc6.tar.gz",
+    "sha256": "d91f12c910816002fb58c5e20ed1feb8084fcfd8c97e62fbaccd759d2765314f",
+    "source_url": "https://codeload.github.com/mpvkit/MPVKit/tar.gz/d9194243bdc68b87d8989376ab52aee7da6c8e0b"
+  },
+  {
+    "repository": "sahlberg/libsmb2",
+    "requested_ref": "727feaaa6d0f4fed1bae57745fbc2c5db9a30e64",
+    "status": "ok",
+    "commit": "727feaaa6d0f4fed1bae57745fbc2c5db9a30e64",
+    "archive": "sahlberg--libsmb2--727feaaa6d0f.tar.gz",
+    "sha256": "ebb5118d338e452b5e8896f0dab4783babe6a368b0c892f1c1a34cf5fdc5f3f7",
+    "source_url": "https://codeload.github.com/sahlberg/libsmb2/tar.gz/727feaaa6d0f4fed1bae57745fbc2c5db9a30e64"
+  },
+  {
+    "repository": "iina/iina",
+    "requested_ref": "3c72aa0593d25d67e52e249b99708baf908bca43",
+    "status": "ok",
+    "commit": "3c72aa0593d25d67e52e249b99708baf908bca43",
+    "archive": "iina--iina--3c72aa0593d2.tar.gz",
+    "sha256": "4d18f12cf981242945c85ba8d033d2e9ff55d819448bc8880d1178f8c310d0cb",
+    "source_url": "https://codeload.github.com/iina/iina/tar.gz/3c72aa0593d25d67e52e249b99708baf908bca43"
+  },
+  {
+    "repository": "mpv-player/mpv",
+    "requested_ref": "v0.41.0",
+    "status": "ok",
+    "commit": "41f6a645068483470267271e1d09966ca3b9f413",
+    "archive": "mpv-player--mpv--41f6a6450684.tar.gz",
+    "sha256": "068960e89211f2adc80af03f637fa393fb5e407d3dd23592c8fe8c5490bb7ae4",
+    "source_url": "https://codeload.github.com/mpv-player/mpv/tar.gz/41f6a645068483470267271e1d09966ca3b9f413"
+  },
+  {
+    "repository": "FFmpeg/FFmpeg",
+    "requested_ref": "n9.0.2",
+    "status": "ok",
+    "commit": "946fcce07b6dcd0331c8cc609192aeff5e1924f8",
+    "archive": "FFmpeg--FFmpeg--946fcce07b6d.tar.gz",
+    "sha256": "0aa2b1de2a5698b20a23e93d539a9a8e82ca0117496c5bdf05d198805f42bb3b",
+    "source_url": "https://codeload.github.com/FFmpeg/FFmpeg/tar.gz/946fcce07b6dcd0331c8cc609192aeff5e1924f8"
+  },
+  {
+    "repository": "mpvkit/openssl-build",
+    "requested_ref": "3.3.5",
+    "status": "ok",
+    "commit": "5634c15217b3a457f55923e5aa62c8c0f891c8d8",
+    "archive": "mpvkit--openssl-build--5634c15217b3.tar.gz",
+    "sha256": "19528f1887be1dc1ca9583ad462eb2305855ae087142eff87422933402dd896e",
+    "source_url": "https://codeload.github.com/mpvkit/openssl-build/tar.gz/5634c15217b3a457f55923e5aa62c8c0f891c8d8"
+  },
+  {
+    "repository": "mpvkit/gnutls-build",
+    "requested_ref": "3.8.11",
+    "status": "ok",
+    "commit": "e766d4e9a38b8360fc8bb61a523e7ab71b1c2303",
+    "archive": "mpvkit--gnutls-build--e766d4e9a38b.tar.gz",
+    "sha256": "e97809456b97e59788235e95e2f1f8450100e12e0ee8ac7f620acdd3812c32d2",
+    "source_url": "https://codeload.github.com/mpvkit/gnutls-build/tar.gz/e766d4e9a38b8360fc8bb61a523e7ab71b1c2303"
+  },
+  {
+    "repository": "mpvkit/libass-build",
+    "requested_ref": "0.17.5",
+    "status": "ok",
+    "commit": "e08eb5bb3be5137e845f781dc9477d1843f23261",
+    "archive": "mpvkit--libass-build--e08eb5bb3be5.tar.gz",
+    "sha256": "4004da6138c3f1e65634143d063710098cf1519618362497fd179cde44ebf05e",
+    "source_url": "https://codeload.github.com/mpvkit/libass-build/tar.gz/e08eb5bb3be5137e845f781dc9477d1843f23261"
+  },
+  {
+    "repository": "mpvkit/libsmbclient-build",
+    "requested_ref": "4.15.13-2512",
+    "status": "ok",
+    "commit": "0ede154198cae8f16a2a9f390608fac52e075bac",
+    "archive": "mpvkit--libsmbclient-build--0ede154198ca.tar.gz",
+    "sha256": "65e7814310a0f9ac4f58e7de3f8904f9f5bcf7a0f4b0184372b9f9abad6e3154",
+    "source_url": "https://codeload.github.com/mpvkit/libsmbclient-build/tar.gz/0ede154198cae8f16a2a9f390608fac52e075bac"
+  },
+  {
+    "repository": "mpvkit/lcms2-build",
+    "requested_ref": "2.17.0",
+    "status": "ok",
+    "commit": "9ffcc2ea5588d9f9bc32ed9350d2a6f7394a19c8",
+    "archive": "mpvkit--lcms2-build--9ffcc2ea5588.tar.gz",
+    "sha256": "80a99a858c46cdd0c6db096e45c0f03e33651b3b154659786feccbbb547490f5",
+    "source_url": "https://codeload.github.com/mpvkit/lcms2-build/tar.gz/9ffcc2ea5588d9f9bc32ed9350d2a6f7394a19c8"
+  },
+  {
+    "repository": "mpvkit/libplacebo-build",
+    "requested_ref": "7.360.1",
+    "status": "ok",
+    "commit": "2e695206593508ce3429ab0807d1962d39a6fc9b",
+    "archive": "mpvkit--libplacebo-build--2e6952065935.tar.gz",
+    "sha256": "cffe974ba47e3d02e6205f909ce6d163b817710b14402798a50d43e50b460d1d",
+    "source_url": "https://codeload.github.com/mpvkit/libplacebo-build/tar.gz/2e695206593508ce3429ab0807d1962d39a6fc9b"
+  },
+  {
+    "repository": "mpvkit/libdovi-build",
+    "requested_ref": "3.3.2",
+    "status": "ok",
+    "commit": "c08af75cb3e8e8fe93f123c5dd81085fbc7ddb9e",
+    "archive": "mpvkit--libdovi-build--c08af75cb3e8.tar.gz",
+    "sha256": "2b8fb631ec3486bb7e1be26b0a0875e5b63bc92a3c56cbd8033b420e25fe7752",
+    "source_url": "https://codeload.github.com/mpvkit/libdovi-build/tar.gz/c08af75cb3e8e8fe93f123c5dd81085fbc7ddb9e"
+  },
+  {
+    "repository": "mpvkit/moltenvk-build",
+    "requested_ref": "1.4.2",
+    "status": "ok",
+    "commit": "e28ea272b73573ef02d256c8abd067f47d925103",
+    "archive": "mpvkit--moltenvk-build--e28ea272b735.tar.gz",
+    "sha256": "740c4a0ace7c6f35153359220f0bf96d5ec35f7877c092b2ff77fa82a5d2bdc7",
+    "source_url": "https://codeload.github.com/mpvkit/moltenvk-build/tar.gz/e28ea272b73573ef02d256c8abd067f47d925103"
+  },
+  {
+    "repository": "mpvkit/libshaderc-build",
+    "requested_ref": "2025.5.0",
+    "status": "ok",
+    "commit": "ed375d782f39ea47d218bbf6bd4ef8ab9081a9d8",
+    "archive": "mpvkit--libshaderc-build--ed375d782f39.tar.gz",
+    "sha256": "8210278580eabaa15638344008990160ab6d5424976cfeba6c61326b12effd7c",
+    "source_url": "https://codeload.github.com/mpvkit/libshaderc-build/tar.gz/ed375d782f39ea47d218bbf6bd4ef8ab9081a9d8"
+  },
+  {
+    "repository": "mpvkit/libuchardet-build",
+    "requested_ref": "0.0.8",
+    "status": "ok",
+    "commit": "e6e7f8bf87f35b8919cc32b51575843402aeb479",
+    "archive": "mpvkit--libuchardet-build--e6e7f8bf87f3.tar.gz",
+    "sha256": "f21cca8686b6a23e876629d4951905b087169983c63a0803e11ca18d87b717a6",
+    "source_url": "https://codeload.github.com/mpvkit/libuchardet-build/tar.gz/e6e7f8bf87f35b8919cc32b51575843402aeb479"
+  },
+  {
+    "repository": "mpvkit/libbluray-build",
+    "requested_ref": "1.4.0",
+    "status": "ok",
+    "commit": "a25a5f013ac647a168716e26b0d4e03dae35b070",
+    "archive": "mpvkit--libbluray-build--a25a5f013ac6.tar.gz",
+    "sha256": "2d382b19c5860bb8747167425aabc3a51c72bc506159fd9e089cdf768df7ffe5",
+    "source_url": "https://codeload.github.com/mpvkit/libbluray-build/tar.gz/a25a5f013ac647a168716e26b0d4e03dae35b070"
+  },
+  {
+    "repository": "mpvkit/libluajit-build",
+    "requested_ref": "2.1.0-fix",
+    "status": "ok",
+    "commit": "825422f9722b888e35a4f466e7652ffe4a8c79a1",
+    "archive": "mpvkit--libluajit-build--825422f9722b.tar.gz",
+    "sha256": "f2e53fea8e837a81fa25ef6893ff140249d2c852d818369af1f47c5ff6b89c9d",
+    "source_url": "https://codeload.github.com/mpvkit/libluajit-build/tar.gz/825422f9722b888e35a4f466e7652ffe4a8c79a1"
+  },
+  {
+    "repository": "mpvkit/libuavs3d-build",
+    "requested_ref": "1.2.1-fix",
+    "status": "ok",
+    "commit": "bfb5c5a79de03711af8407a040baefe38a74d9b9",
+    "archive": "mpvkit--libuavs3d-build--bfb5c5a79de0.tar.gz",
+    "sha256": "98c49d2fe954e020d258c402f59abc1f9246f51d0051893640f4326d54e9d2df",
+    "source_url": "https://codeload.github.com/mpvkit/libuavs3d-build/tar.gz/bfb5c5a79de03711af8407a040baefe38a74d9b9"
+  },
+  {
+    "repository": "fribidi/fribidi",
+    "requested_ref": "v1.0.16",
+    "status": "ok",
+    "commit": "68162babff4f39c4e2dc164a5e825af93bda9983",
+    "archive": "fribidi--fribidi--68162babff4f.tar.gz",
+    "sha256": "fa34a057a414c85f7e1f3c0fd717bc93d74d370ed474ef2feca90868b4938f72",
+    "source_url": "https://codeload.github.com/fribidi/fribidi/tar.gz/68162babff4f39c4e2dc164a5e825af93bda9983"
+  },
+  {
+    "repository": "harfbuzz/harfbuzz",
+    "requested_ref": "14.2.0",
+    "status": "ok",
+    "commit": "b0ffab42d473eb380ad0fcf42730e0f1868cbc97",
+    "archive": "harfbuzz--harfbuzz--b0ffab42d473.tar.gz",
+    "sha256": "f1b3ded79afb04296a328d1a2049484717321d786a138b56e301b75300b48c1a",
+    "source_url": "https://codeload.github.com/harfbuzz/harfbuzz/tar.gz/b0ffab42d473eb380ad0fcf42730e0f1868cbc97"
+  },
+  {
+    "repository": "libass/libass",
+    "requested_ref": "0.17.5",
+    "status": "ok",
+    "commit": "4a05d8127f525943ebf45fdc6497c9e665947f0d",
+    "archive": "libass--libass--4a05d8127f52.tar.gz",
+    "sha256": "3546ecc8748c62e100a9dd18e52ea2d17d7facedf89cfcad97000ad60b1bce2b",
+    "source_url": "https://codeload.github.com/libass/libass/tar.gz/4a05d8127f525943ebf45fdc6497c9e665947f0d"
+  },
+  {
+    "repository": "samba-team/samba",
+    "requested_ref": "samba-4.15.13",
+    "status": "ok",
+    "commit": "861b4f9fde0128609abcb4eafce6192fbf0a959a",
+    "archive": "samba-team--samba--861b4f9fde01.tar.gz",
+    "sha256": "527cc40dcf17fa454bd8d94fb47cff028f0ab7ad18b69222f1b55a7562ae8808",
+    "source_url": "https://codeload.github.com/samba-team/samba/tar.gz/861b4f9fde0128609abcb4eafce6192fbf0a959a"
+  },
+  {
+    "repository": "mpvkit/readline-build",
+    "requested_ref": "8.3.0",
+    "status": "ok",
+    "commit": "b59f7d52ee860a867245e705329f118026083ca1",
+    "archive": "mpvkit--readline-build--b59f7d52ee86.tar.gz",
+    "sha256": "e7754b081fc260c7b9a0e5f2606f4fef1f96d68c88ee53f077b43538e375f58d",
+    "source_url": "https://codeload.github.com/mpvkit/readline-build/tar.gz/b59f7d52ee860a867245e705329f118026083ca1"
+  },
+  {
+    "repository": "mm2/Little-CMS",
+    "requested_ref": "lcms2.17",
+    "status": "ok",
+    "commit": "5176347635785e53ee5cee92328f76fda766ecc6",
+    "archive": "mm2--Little-CMS--517634763578.tar.gz",
+    "sha256": "55c92b24f939a8493b07f076bee849af656a13cc69f330816e6936e95b312396",
+    "source_url": "https://codeload.github.com/mm2/Little-CMS/tar.gz/5176347635785e53ee5cee92328f76fda766ecc6"
+  },
+  {
+    "repository": "mpvkit/moltenvk-build",
+    "requested_ref": "1.4.1",
+    "status": "ok",
+    "commit": "c8bdb96a7bb436e1b42a149d5c8588d99483ff17",
+    "archive": "mpvkit--moltenvk-build--c8bdb96a7bb4.tar.gz",
+    "sha256": "4a7b24d6bf4e4b8d181556d5c2b9656bc12e3f46c7c68861ecec2338f3f1db2c",
+    "source_url": "https://codeload.github.com/mpvkit/moltenvk-build/tar.gz/c8bdb96a7bb436e1b42a149d5c8588d99483ff17"
+  },
+  {
+    "repository": "KhronosGroup/SPIRV-Cross",
+    "requested_ref": "vulkan-sdk-1.4.309.0",
+    "status": "ok",
+    "commit": "2c32b6bf86f3c4a5539aa1f0bacbd59fe61759cf",
+    "archive": "KhronosGroup--SPIRV-Cross--2c32b6bf86f3.tar.gz",
+    "sha256": "1f32df3fc69276d53979f94d253d2b8d7388f55a5ede59f8cc6a308c23e9e0c0",
+    "source_url": "https://codeload.github.com/KhronosGroup/SPIRV-Cross/tar.gz/2c32b6bf86f3c4a5539aa1f0bacbd59fe61759cf"
+  },
+  {
+    "repository": "haasn/libplacebo",
+    "requested_ref": "v7.360.1",
+    "status": "ok",
+    "commit": "cee9b076f2c63104ccfd497fa79c39a867293ec4",
+    "archive": "haasn--libplacebo--cee9b076f2c6.tar.gz",
+    "sha256": "6f8fa218cbafd8e5f50b8a82d918e1d8bbb92f9f980820bc0b34d92e9b79e484",
+    "source_url": "https://codeload.github.com/haasn/libplacebo/tar.gz/cee9b076f2c63104ccfd497fa79c39a867293ec4"
+  },
+  {
+    "repository": "quietvoid/dovi_tool",
+    "requested_ref": "libdovi-3.3.2",
+    "status": "ok",
+    "commit": "4fd2b2235c9f93582dd4a00e65ee34a07800afd7",
+    "archive": "quietvoid--dovi_tool--4fd2b2235c9f.tar.gz",
+    "sha256": "bfbd324c867586968fd9b5df2ee7977acb11097bc098b2a8e261d68b8f3f52d0",
+    "source_url": "https://codeload.github.com/quietvoid/dovi_tool/tar.gz/4fd2b2235c9f93582dd4a00e65ee34a07800afd7"
+  },
+  {
+    "repository": "KhronosGroup/MoltenVK",
+    "requested_ref": "v1.4.2",
+    "status": "ok",
+    "commit": "db66022459ffb663aa2b50f6b018bc2e124f5edf",
+    "archive": "KhronosGroup--MoltenVK--db66022459ff.tar.gz",
+    "sha256": "c6ced1eb31827be7f10e2d8d77087486c75e595ab068e665a712d73b99a8ff06",
+    "source_url": "https://codeload.github.com/KhronosGroup/MoltenVK/tar.gz/db66022459ffb663aa2b50f6b018bc2e124f5edf"
+  },
+  {
+    "repository": "google/shaderc",
+    "requested_ref": "v2025.5",
+    "status": "ok",
+    "commit": "c4b0af6c3664cd8b33ffddf452514e02a173b4d6",
+    "archive": "google--shaderc--c4b0af6c3664.tar.gz",
+    "sha256": "ffef97c43a85dbaacc8ac3e81ff2f473c60e2cd1fa92b5de58fb8840435c59bb",
+    "source_url": "https://codeload.github.com/google/shaderc/tar.gz/c4b0af6c3664cd8b33ffddf452514e02a173b4d6"
+  },
+  {
+    "repository": "mpvkit/libass-build",
+    "requested_ref": "0.17.4",
+    "status": "ok",
+    "commit": "392f59146f1e043401126abb385678180f6ae8ef",
+    "archive": "mpvkit--libass-build--392f59146f1e.tar.gz",
+    "sha256": "162a68714032f57b97e84bc717c04f77ab4ff6233d2dae0e2d73b23c9c0988b9",
+    "source_url": "https://codeload.github.com/mpvkit/libass-build/tar.gz/392f59146f1e043401126abb385678180f6ae8ef"
+  },
+  {
+    "repository": "LuaJIT/LuaJIT",
+    "requested_ref": "v2.1",
+    "status": "ok",
+    "commit": "a4c064539ea931274d407e1249b4bb575424a0f4",
+    "archive": "LuaJIT--LuaJIT--a4c064539ea9.tar.gz",
+    "sha256": "15625df3ebfbd1f76371005bffae39b84c65e718e57acc9a9c57863c7c101541",
+    "source_url": "https://codeload.github.com/LuaJIT/LuaJIT/tar.gz/a4c064539ea931274d407e1249b4bb575424a0f4"
+  },
+  {
+    "repository": "uavs3/uavs3d",
+    "requested_ref": "1.0",
+    "status": "ok",
+    "commit": "5914c217debb1e9579b287d5d3154a4d2e010f06",
+    "archive": "uavs3--uavs3d--5914c217debb.tar.gz",
+    "sha256": "0045dc2b66926b5f3decef3e6732c3d7d8796b508375b6ef39b9587ba8a54dee",
+    "source_url": "https://codeload.github.com/uavs3/uavs3d/tar.gz/5914c217debb1e9579b287d5d3154a4d2e010f06"
+  },
+  {
+    "repository": "KhronosGroup/MoltenVK",
+    "requested_ref": "v1.4.1",
+    "status": "ok",
+    "commit": "db445ff2042d9ce348c439ad8451112f354b8d2a",
+    "archive": "KhronosGroup--MoltenVK--db445ff2042d.tar.gz",
+    "sha256": "54e1881e8f10c7dcc4828c14d3e0fc699a6f6c563a78ba8a631c626c836ae429",
+    "source_url": "https://codeload.github.com/KhronosGroup/MoltenVK/tar.gz/db445ff2042d9ce348c439ad8451112f354b8d2a"
+  },
+  {
+    "repository": "Immediate-Mode-UI/Nuklear",
+    "requested_ref": "242f35efa067a46c595645eeda7b1771ea1f83b1",
+    "status": "ok",
+    "commit": "242f35efa067a46c595645eeda7b1771ea1f83b1",
+    "archive": "Immediate-Mode-UI--Nuklear--242f35efa067.tar.gz",
+    "sha256": "ac567995f917c10a722409e0141d226e737d06488b0a31166f6e4925da8e58f0",
+    "source_url": "https://codeload.github.com/Immediate-Mode-UI/Nuklear/tar.gz/242f35efa067a46c595645eeda7b1771ea1f83b1"
+  },
+  {
+    "repository": "Dav1dde/glad",
+    "requested_ref": "73db193f853e2ee079bf3ca8a64aa2eaf6459043",
+    "status": "ok",
+    "commit": "73db193f853e2ee079bf3ca8a64aa2eaf6459043",
+    "archive": "Dav1dde--glad--73db193f853e.tar.gz",
+    "sha256": "33dbeae44d8315ece57e14eba4b1b4a02ac5406d1c4f49cd20048c91522a6b9a",
+    "source_url": "https://codeload.github.com/Dav1dde/glad/tar.gz/73db193f853e2ee079bf3ca8a64aa2eaf6459043"
+  },
+  {
+    "repository": "pallets/jinja",
+    "requested_ref": "15206881c006c79667fe5154fe80c01c65410679",
+    "status": "ok",
+    "commit": "15206881c006c79667fe5154fe80c01c65410679",
+    "archive": "pallets--jinja--15206881c006.tar.gz",
+    "sha256": "b88a20dcc2e34072fcf4159325bc6c34cd4b29a81a8b83d15d2f28ba561da296",
+    "source_url": "https://codeload.github.com/pallets/jinja/tar.gz/15206881c006c79667fe5154fe80c01c65410679"
+  },
+  {
+    "repository": "pallets/markupsafe",
+    "requested_ref": "297fc8e356e6836a62087949245d09a28e9f1b13",
+    "status": "ok",
+    "commit": "297fc8e356e6836a62087949245d09a28e9f1b13",
+    "archive": "pallets--markupsafe--297fc8e356e6.tar.gz",
+    "sha256": "da7c010c9c81a66ac73036558c1fcb6212b50482f43211cd1254035b94f82414",
+    "source_url": "https://codeload.github.com/pallets/markupsafe/tar.gz/297fc8e356e6836a62087949245d09a28e9f1b13"
+  },
+  {
+    "repository": "fastfloat/fast_float",
+    "requested_ref": "97b54ca9e75f5303507699d27c6b4f4efe4641a1",
+    "status": "ok",
+    "commit": "97b54ca9e75f5303507699d27c6b4f4efe4641a1",
+    "archive": "fastfloat--fast_float--97b54ca9e75f.tar.gz",
+    "sha256": "2b132274539286e41f37857cac22aa8441d21bd86d55de825a3342b149f66801",
+    "source_url": "https://codeload.github.com/fastfloat/fast_float/tar.gz/97b54ca9e75f5303507699d27c6b4f4efe4641a1"
+  },
+  {
+    "repository": "freetype/freetype",
+    "requested_ref": "VER-2-12-1",
+    "status": "ok",
+    "commit": "e8ebfe988b5f57bfb9a3ecb13c70d9791bce9ecf",
+    "archive": "freetype--freetype--e8ebfe988b5f.tar.gz",
+    "sha256": "1de6abbd7d2d0605cbf9eac8002ac481392e90cf1f491b6c16f56b88fa3bb58a",
+    "source_url": "https://codeload.github.com/freetype/freetype/tar.gz/e8ebfe988b5f57bfb9a3ecb13c70d9791bce9ecf"
+  },
+  {
+    "repository": "fribidi/fribidi",
+    "requested_ref": "v1.0.12",
+    "status": "ok",
+    "commit": "6428d8469e536bcbb6e12c7b79ba6659371c435a",
+    "archive": "fribidi--fribidi--6428d8469e53.tar.gz",
+    "sha256": "7920b7d33f1e3945134745a8c665ca5bc748b9d907b3a03b1a6d481a77c0ae7f",
+    "source_url": "https://codeload.github.com/fribidi/fribidi/tar.gz/6428d8469e536bcbb6e12c7b79ba6659371c435a"
+  },
+  {
+    "repository": "harfbuzz/harfbuzz",
+    "requested_ref": "8.1.1",
+    "status": "ok",
+    "commit": "1d665c2b521512cdd56964138fc601debd1f1177",
+    "archive": "harfbuzz--harfbuzz--1d665c2b5215.tar.gz",
+    "sha256": "dcec385b8ec747fdde84e9ce1027142bb7a0b2a4d894d1f876aba07aa3d51e26",
+    "source_url": "https://codeload.github.com/harfbuzz/harfbuzz/tar.gz/1d665c2b521512cdd56964138fc601debd1f1177"
+  },
+  {
+    "repository": "libass/libass",
+    "requested_ref": "0.17.4",
+    "status": "ok",
+    "commit": "bbb3c7f1570a4a021e52683f3fbdf74fe492ae84",
+    "archive": "libass--libass--bbb3c7f1570a.tar.gz",
+    "sha256": "93796cd47cc878220f3466352315888daba8a48d673cdd8c44350b26f516e064",
+    "source_url": "https://codeload.github.com/libass/libass/tar.gz/bbb3c7f1570a4a021e52683f3fbdf74fe492ae84"
+  },
+  {
+    "repository": "nyorain/dlg",
+    "requested_ref": "d142e646e263c89f93663e027c2f0d03739ab42d",
+    "status": "ok",
+    "commit": "d142e646e263c89f93663e027c2f0d03739ab42d",
+    "archive": "nyorain--dlg--d142e646e263.tar.gz",
+    "sha256": "ec99c57984ebe8d1b3aa28d90c5758c7b83b63c04d0b0b10db7de207de06ef28",
+    "source_url": "https://codeload.github.com/nyorain/dlg/tar.gz/d142e646e263c89f93663e027c2f0d03739ab42d"
+  },
+  {
+    "repository": "gnutls/gnutls",
+    "requested_ref": "3.8.11",
+    "status": "ok",
+    "commit": "b841c70e101311f5711ad9fd5d24d33684c2c76d",
+    "archive": "gnutls--gnutls--b841c70e1013.tar.gz",
+    "sha256": "8a250a6b7c9fba403903e9177aa2aee16ad6f002bb9a2725c4000e88dc4368bc",
+    "source_url": "https://codeload.github.com/gnutls/gnutls/tar.gz/b841c70e101311f5711ad9fd5d24d33684c2c76d"
+  },
+  {
+    "repository": "openssl/openssl",
+    "requested_ref": "openssl-3.3.5",
+    "status": "ok",
+    "commit": "f10934c46fef092d04788f01fd0a4eafe3ef715f",
+    "archive": "openssl--openssl--f10934c46fef.tar.gz",
+    "sha256": "4c3c67a46fb2cd74e6e378a56d6974c3d075bb6cd16650f6f12eb5bd3c6360e3",
+    "source_url": "https://codeload.github.com/openssl/openssl/tar.gz/f10934c46fef092d04788f01fd0a4eafe3ef715f"
+  },
+  {
+    "repository": "mpvkit/libdav1d-build",
+    "requested_ref": "1.5.3",
+    "status": "ok",
+    "commit": "d8e86b1c168a8b142e3d2f4787ad8d3b67255cf8",
+    "archive": "mpvkit--libdav1d-build--d8e86b1c168a.tar.gz",
+    "sha256": "02a35e9ff5b7b1659218213c5503f4e635b2f713c8ceed441fe33d39b2575676",
+    "source_url": "https://codeload.github.com/mpvkit/libdav1d-build/tar.gz/d8e86b1c168a8b142e3d2f4787ad8d3b67255cf8"
+  },
+  {
+    "repository": "alisw/GMP",
+    "requested_ref": "v6.2.1",
+    "status": "ok",
+    "commit": "2bbd52703e5af82509773264bfbd20ff8464804f",
+    "archive": "alisw--GMP--2bbd52703e5a.tar.gz",
+    "sha256": "8d97bc601bf26bd6230c61348a4cff6854ac5e6f8e394d61bc178d316e07d524",
+    "source_url": "https://codeload.github.com/alisw/GMP/tar.gz/2bbd52703e5af82509773264bfbd20ff8464804f"
+  },
+  {
+    "repository": "adah1972/libunibreak",
+    "requested_ref": "libunibreak_6_1",
+    "status": "ok",
+    "commit": "304585d8e2d63187507368d612c3d5fff1486368",
+    "archive": "adah1972--libunibreak--304585d8e2d6.tar.gz",
+    "sha256": "bb39d83139073d4f927e9e41633556df87db0b937179ee6687ed52320387a02d",
+    "source_url": "https://codeload.github.com/adah1972/libunibreak/tar.gz/304585d8e2d63187507368d612c3d5fff1486368"
+  },
+  {
+    "repository": "freetype/freetype",
+    "requested_ref": "VER-2-14-3",
+    "status": "ok",
+    "commit": "0a0221a1347e2f1e07c395263540026e9a0aa7c7",
+    "archive": "freetype--freetype--0a0221a1347e.tar.gz",
+    "sha256": "11cd478953fc1d382f20a233b8e2aed6c31b47cbf0568c4bdb3334bcc1550698",
+    "source_url": "https://codeload.github.com/freetype/freetype/tar.gz/0a0221a1347e2f1e07c395263540026e9a0aa7c7"
+  },
+  {
+    "repository": "KhronosGroup/Vulkan-Headers",
+    "requested_ref": "450bd2232225d6c7728a4108055ac2e37cef6475",
+    "status": "ok",
+    "commit": "450bd2232225d6c7728a4108055ac2e37cef6475",
+    "archive": "KhronosGroup--Vulkan-Headers--450bd2232225.tar.gz",
+    "sha256": "26df9841c30806a994e2fdf42f7c87bcb1ced9db9a06033469123939fb3fa075",
+    "source_url": "https://codeload.github.com/KhronosGroup/Vulkan-Headers/tar.gz/450bd2232225d6c7728a4108055ac2e37cef6475"
+  },
+  {
+    "repository": "videolan/dav1d",
+    "requested_ref": "1.5.3",
+    "status": "ok",
+    "commit": "b546257f770768b2c88258c533da38b91a06f737",
+    "archive": "videolan--dav1d--b546257f7707.tar.gz",
+    "sha256": "c5b7428c3f5b28db0aee0c62f6ffb2b42f4b08e7be5ce49d7ad046aaf0dc151d",
+    "source_url": "https://codeload.github.com/videolan/dav1d/tar.gz/b546257f770768b2c88258c533da38b91a06f737"
+  },
+  {
+    "repository": "openssl/openssl",
+    "requested_ref": "a7e992847de83aa36be0c399c89db3fb827b0be2",
+    "status": "ok",
+    "commit": "a7e992847de83aa36be0c399c89db3fb827b0be2",
+    "archive": "openssl--openssl--a7e992847de8.tar.gz",
+    "sha256": "0798789abefe9651bf14d48ba68674c2e49ffa9342a5d6500807abbf8e76fe08",
+    "source_url": "https://codeload.github.com/openssl/openssl/tar.gz/a7e992847de83aa36be0c399c89db3fb827b0be2"
+  },
+  {
+    "repository": "tomato42/tlsfuzzer",
+    "requested_ref": "4216d2ca4b017a893cc7681c2baa1635dbdf3f0f",
+    "status": "ok",
+    "commit": "4216d2ca4b017a893cc7681c2baa1635dbdf3f0f",
+    "archive": "tomato42--tlsfuzzer--4216d2ca4b01.tar.gz",
+    "sha256": "7199c432b25deb5bd9babe393c0059604bde4d7a5793df94816151167dfb677c",
+    "source_url": "https://codeload.github.com/tomato42/tlsfuzzer/tar.gz/4216d2ca4b017a893cc7681c2baa1635dbdf3f0f"
+  },
+  {
+    "repository": "warner/python-ecdsa",
+    "requested_ref": "c8802e5c4f20557b674ef3d724985d40b5ff0537",
+    "status": "ok",
+    "commit": "c8802e5c4f20557b674ef3d724985d40b5ff0537",
+    "archive": "warner--python-ecdsa--c8802e5c4f20.tar.gz",
+    "sha256": "71bc482ab77f019049d728565f4ea6b74a7c279541469100ab75824b9c876811",
+    "source_url": "https://codeload.github.com/warner/python-ecdsa/tar.gz/c8802e5c4f20557b674ef3d724985d40b5ff0537"
+  },
+  {
+    "repository": "tomato42/tlslite-ng",
+    "requested_ref": "b6dd1c2bd3b3dc05bf1d794344ad4c2e4a0e20d9",
+    "status": "ok",
+    "commit": "b6dd1c2bd3b3dc05bf1d794344ad4c2e4a0e20d9",
+    "archive": "tomato42--tlslite-ng--b6dd1c2bd3b3.tar.gz",
+    "sha256": "0bb13db32974e670a14f6595fcf5d5799f08dfa02ba07677871398a74d6df7fb",
+    "source_url": "https://codeload.github.com/tomato42/tlslite-ng/tar.gz/b6dd1c2bd3b3dc05bf1d794344ad4c2e4a0e20d9"
+  },
+  {
+    "repository": "nyorain/dlg",
+    "requested_ref": "395ccad2c1e0daae535c4d20bb0a3f2424648e17",
+    "status": "ok",
+    "commit": "395ccad2c1e0daae535c4d20bb0a3f2424648e17",
+    "archive": "nyorain--dlg--395ccad2c1e0.tar.gz",
+    "sha256": "263a4a3777d9839e34cd41db988310659e0c00eab37beb7aedd30511a460133b",
+    "source_url": "https://codeload.github.com/nyorain/dlg/tar.gz/395ccad2c1e0daae535c4d20bb0a3f2424648e17"
+  },
+  {
+    "repository": "abseil/abseil-cpp",
+    "requested_ref": "1315c900e1ddbb08a23e06eeb9a06450052ccb5e",
+    "status": "ok",
+    "commit": "1315c900e1ddbb08a23e06eeb9a06450052ccb5e",
+    "archive": "abseil--abseil-cpp--1315c900e1dd.tar.gz",
+    "sha256": "4ae9fc64860d5204f0ca6bd6c7a5f8e59ced118494db7e14537d8ed55dce5715",
+    "source_url": "https://codeload.github.com/abseil/abseil-cpp/tar.gz/1315c900e1ddbb08a23e06eeb9a06450052ccb5e"
+  },
+  {
+    "repository": "KhronosGroup/glslang",
+    "requested_ref": "7a47e2531cb334982b2a2dd8513dca0a3de4373d",
+    "status": "ok",
+    "commit": "7a47e2531cb334982b2a2dd8513dca0a3de4373d",
+    "archive": "KhronosGroup--glslang--7a47e2531cb3.tar.gz",
+    "sha256": "272d2725b140e09e85b96eecdc59c2e00c1a14cda2301767e1bf3c363a44b931",
+    "source_url": "https://codeload.github.com/KhronosGroup/glslang/tar.gz/7a47e2531cb334982b2a2dd8513dca0a3de4373d"
+  },
+  {
+    "repository": "google/googletest",
+    "requested_ref": "1d17ea141d2c11b8917d2c7d029f1c4e2b9769b2",
+    "status": "ok",
+    "commit": "1d17ea141d2c11b8917d2c7d029f1c4e2b9769b2",
+    "archive": "google--googletest--1d17ea141d2c.tar.gz",
+    "sha256": "7aca173cc96c0feaa01035184e34b020daaa93ddc132c5a829b7ea34006f701b",
+    "source_url": "https://codeload.github.com/google/googletest/tar.gz/1d17ea141d2c11b8917d2c7d029f1c4e2b9769b2"
+  },
+  {
+    "repository": "mpvkit/BuildShared",
+    "requested_ref": "main",
+    "status": "ok",
+    "commit": "9a88248ae6e676be167535751d339f929b60e70a",
+    "archive": "mpvkit--BuildShared--9a88248ae6e6.tar.gz",
+    "sha256": "2a93a6a1b712e47ecfe967a3f9a14784158bf485c26a751a8b8964274d451611",
+    "source_url": "https://codeload.github.com/mpvkit/BuildShared/tar.gz/9a88248ae6e676be167535751d339f929b60e70a"
+  },
+  {
+    "repository": "google/effcee",
+    "requested_ref": "08da24ec245a274fea3a128ba50068f163390565",
+    "status": "ok",
+    "commit": "08da24ec245a274fea3a128ba50068f163390565",
+    "archive": "google--effcee--08da24ec245a.tar.gz",
+    "sha256": "d6d6b602f1b6f09d3a83c44a067d087c23fdc3d3530e2e5dd27be2adda91fe4d",
+    "source_url": "https://codeload.github.com/google/effcee/tar.gz/08da24ec245a274fea3a128ba50068f163390565"
+  },
+  {
+    "repository": "google/re2",
+    "requested_ref": "4a8cee3dd3c3d81b6fe8b867811e193d5819df07",
+    "status": "ok",
+    "commit": "4a8cee3dd3c3d81b6fe8b867811e193d5819df07",
+    "archive": "google--re2--4a8cee3dd3c3.tar.gz",
+    "sha256": "f0a65168e64a10ab556b265f2f411678e6b9555f21e04202f84f250b659954ba",
+    "source_url": "https://codeload.github.com/google/re2/tar.gz/4a8cee3dd3c3d81b6fe8b867811e193d5819df07"
+  },
+  {
+    "repository": "KhronosGroup/SPIRV-Headers",
+    "requested_ref": "b824a462d4256d720bebb40e78b9eb8f78bbb305",
+    "status": "ok",
+    "commit": "b824a462d4256d720bebb40e78b9eb8f78bbb305",
+    "archive": "KhronosGroup--SPIRV-Headers--b824a462d425.tar.gz",
+    "sha256": "c693867f10a7760ef1bcf85419d51783586768cc2c601d03841bc6a8b2554b9c",
+    "source_url": "https://codeload.github.com/KhronosGroup/SPIRV-Headers/tar.gz/b824a462d4256d720bebb40e78b9eb8f78bbb305"
+  },
+  {
+    "repository": "KhronosGroup/SPIRV-Tools",
+    "requested_ref": "262bdab48146c937467f826699a40da0fdfc0f1a",
+    "status": "ok",
+    "commit": "262bdab48146c937467f826699a40da0fdfc0f1a",
+    "archive": "KhronosGroup--SPIRV-Tools--262bdab48146.tar.gz",
+    "sha256": "8f830936b057003be77e90d37068ff6066eb87a1bab0033f8f2f5feaa966ce56",
+    "source_url": "https://codeload.github.com/KhronosGroup/SPIRV-Tools/tar.gz/262bdab48146c937467f826699a40da0fdfc0f1a"
+  }
+]

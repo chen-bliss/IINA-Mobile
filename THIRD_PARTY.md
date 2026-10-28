@@ -45,3 +45,7 @@ The application is distributed as GPL-3.0-or-later source. See LICENSE. It is an
 The app icon and test media were generated for this project. `Scripts/generate_samples.py` reproduces them with the Python standard library and FFmpeg. The HDR sample uses BT.2020 primaries, SMPTE ST 2084 PQ, 10-bit HEVC, HDR10 mastering metadata and a controlled 0–1000-nit gradient.
 
 No server password is embedded in the source or project. Fixed credentials in the QA scripts are only for a loopback test server serving generated media.
+
+## Release source archives
+
+Pinned source revisions, build scripts and archive SHA-256 values are indexed in `Dependencies/SOURCES.json` and `Dependencies/ADDITIONAL-SOURCES.json`. The matching Release includes a `ThirdPartySources.tar` source archive bundle. Rust dependency sources follow libdovi’s library Cargo.lock.

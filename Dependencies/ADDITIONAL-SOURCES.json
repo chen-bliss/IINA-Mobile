@@ -1,0 +1,34 @@
+[
+  {
+    "repository": "nettle",
+    "requested_ref": "nettle_3.10_release_20240616",
+    "source_url": "https://ftp.gnu.org/gnu/nettle/nettle-3.10.tar.gz",
+    "archive": "nettle-3.10.tar.gz",
+    "sha256": "b4c518adb174e484cb4acea54118f02380c7133771e7e9beb98a0787194ee47c",
+    "status": "ok"
+  },
+  {
+    "repository": "uchardet",
+    "requested_ref": "v0.0.8",
+    "source_url": "https://www.freedesktop.org/software/uchardet/releases/uchardet-0.0.8.tar.xz",
+    "archive": "uchardet-0.0.8.tar.xz",
+    "sha256": "e97a60cfc00a1c147a674b097bb1422abd9fa78a2d9ce3f3fdcc2e78a34ac5f0",
+    "status": "ok"
+  },
+  {
+    "repository": "libbluray",
+    "requested_ref": "1.4.0",
+    "source_url": "https://download.videolan.org/pub/videolan/libbluray/1.4.0/libbluray-1.4.0.tar.xz",
+    "archive": "libbluray-1.4.0.tar.xz",
+    "sha256": "77937baf07eadda4b2b311cf3af4c50269d2ea3165041f5843d96476c4c92777",
+    "status": "ok"
+  },
+  {
+    "repository": "readline",
+    "requested_ref": "readline-8.3",
+    "source_url": "https://ftp.gnu.org/gnu/readline/readline-8.3.tar.gz",
+    "archive": "readline-8.3.tar.gz",
+    "sha256": "fe5383204467828cd495ee8d1d3c037a7eba1389c22bc6a041f627976f9061cc",
+    "status": "ok"
+  }
+]
