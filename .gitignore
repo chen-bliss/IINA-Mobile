@@ -1,0 +1,12 @@
+Build/
+BuildDevice/
+.downloads/
+.qa-venv/
+*.xcresult/
+*.log
+**/xcuserdata/
+.DS_Store
+Distribution/
+work/
+Vendor/MPVKit/Artifacts/
+__pycache__/

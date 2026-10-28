@@ -1,0 +1,9 @@
+#include <stdint.h>
+#include <stddef.h>
+#include <sys/types.h>
+#include <sys/time.h>
+#include <time.h>
+#include "smb2/smb2.h"
+#include "smb2/libsmb2.h"
+#include "smb2/libsmb2-raw.h"
+#include "smb2/libsmb2-share-enum.h"

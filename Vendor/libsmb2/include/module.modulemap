@@ -1,0 +1,4 @@
+module IINASMB2 [system] {
+    header "IINASMB2.h"
+    export *
+}

@@ -1,0 +1,101 @@
+name: IINAMobile
+options:
+  bundleIdPrefix: org.local.iinamobile
+  deploymentTarget:
+    iOS: "17.0"
+packages:
+  IINASMB2:
+    path: Vendor/libsmb2
+  MPVKit:
+    path: Vendor/MPVKit
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    DEVELOPMENT_TEAM: ""
+    CODE_SIGN_STYLE: Automatic
+    IPHONEOS_DEPLOYMENT_TARGET: "17.0"
+targets:
+  IINAMobile:
+    type: application
+    platform: iOS
+    sources:
+      - path: App
+      - path: Resources
+        excludes: [Fonts]
+        buildPhase: resources
+      - path: Resources/Fonts
+        type: folder
+        buildPhase: resources
+    dependencies:
+      - package: IINASMB2
+        product: IINASMB2
+      - package: MPVKit
+        product: MPVKit-GPL
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: org.local.iinamobile.player
+        PRODUCT_NAME: IINAMobile
+        SWIFT_OBJC_BRIDGING_HEADER: App/IINAMobile-Bridging-Header.h
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        MARKETING_VERSION: "0.4.0"
+        CURRENT_PROJECT_VERSION: "7"
+        TARGETED_DEVICE_FAMILY: "1,2"
+    info:
+      path: App/Info.plist
+      properties:
+        CFBundleDisplayName: IINA Mobile
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        UILaunchScreen: {}
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        NSLocalNetworkUsageDescription: 连接你添加的 SMB 服务器并播放其中的视频。
+        NSAppTransportSecurity:
+          NSAllowsArbitraryLoads: true
+        UIFileSharingEnabled: true
+        LSSupportsOpeningDocumentsInPlace: true
+        CFBundleDocumentTypes:
+          - CFBundleTypeName: Video and subtitles
+            LSHandlerRank: Alternate
+            LSItemContentTypes: [public.movie, public.video, public.subtitle, public.data]
+  IINAMobileTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [Tests]
+    dependencies:
+      - target: IINAMobile
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+  IINAMobileUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [UITests]
+    dependencies:
+      - target: IINAMobile
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+schemes:
+  SMBQA:
+    build:
+      targets:
+        IINAMobile: all
+    test:
+      environmentVariables:
+        IINA_SMB_QA: "1"
+      targets: [IINAMobileTests, IINAMobileUITests]
+  IINAMobile:
+    build:
+      targets:
+        IINAMobile: all
+    run:
+      config: Debug
+      disableMainThreadChecker: false
+      enableGPUValidationMode: false
+    test:
+      targets: [IINAMobileTests, IINAMobileUITests]
