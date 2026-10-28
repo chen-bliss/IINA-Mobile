@@ -10,7 +10,7 @@ from impacket.ntlm import compute_lmhash, compute_nthash
 source=Path(__file__).resolve().parents[1]/'Resources'
 fixture=tempfile.TemporaryDirectory(prefix='iina-smb-fixture-',dir=os.environ.get('IINA_QA_WORK_DIR'))
 root=Path(fixture.name)
-for name in ['Sample-SDR.mkv','Sample-HDR.mkv','Sample.ass']:
+for name in ['Sample-SDR.mkv','Sample-HDR.mkv','Sample.ass','QA-PiP.mp4','QA-Tracks.mkv']:
     shutil.copyfile(source/name,root/name)
 shutil.copyfile(source/'Sample.ass',root/'Sample-SDR.ass')
 folder=root/'中文目录'

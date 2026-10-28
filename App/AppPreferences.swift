@@ -7,13 +7,21 @@ enum SubtitlePreference: String, Codable, CaseIterable, Identifiable {
     case automatic, simplified, traditional, off
     var id: String { rawValue }
     var title: String {
-        switch self { case .automatic: return "自动选择"; case .simplified: return "优先简体中文"; case .traditional: return "优先繁体中文"; case .off: return "默认关闭" }
+        switch self { case .automatic: return L("自动选择"); case .simplified: return L("优先简体中文"); case .traditional: return L("优先繁体中文"); case .off: return L("默认关闭") }
     }
     var languages: String {
         switch self {
         case .traditional: return "zh-Hant,zh-TW,zh-HK,cht,zh,chi,zho,en"
         case .simplified: return "zh-Hans,zh-CN,chs,zh,chi,zho,en"
-        default: return "zh-Hans,zh,chi,zho,en"
+        default:
+            switch AppLanguage.current {
+            case "zh-Hans": return "zh-Hans,zh,chi,zho,en,eng"
+            case "fr": return "fr,fra,fre,en,eng"
+            case "es": return "es,spa,en,eng"
+            case "ru": return "ru,rus,en,eng"
+            case "ar": return "ar,ara,en,eng"
+            default: return "en,eng"
+            }
         }
     }
 }

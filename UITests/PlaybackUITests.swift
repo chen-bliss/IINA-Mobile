@@ -7,6 +7,7 @@ final class PlaybackUITests: XCTestCase {
     private func launch() -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = ["--uitesting", "--show-player-settings"]
+        app.launchArguments += ["-AppleLanguages", "(zh-Hans)"]
         app.launch()
         return app
     }
@@ -127,6 +128,7 @@ final class PlaybackUITests: XCTestCase {
     func testSMBVideoPlayback() {
         let app = XCUIApplication()
         app.launchArguments = ["--uitesting", "--show-player-settings", "--smb-qa"]
+        app.launchArguments += ["-AppleLanguages", "(zh-Hans)"]
         app.launch()
         let server = app.buttons["server_SMB QA"]
         XCTAssertTrue(server.waitForExistence(timeout: 10))
@@ -144,7 +146,7 @@ final class PlaybackUITests: XCTestCase {
     func testHistoryResumeAndSettingsEntry() {
         let app = launch()
         app.buttons["openSettings"].tap()
-        XCTAssertTrue(app.navigationBars["设置"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["settingsTitle"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.buttons["defaultRendering"].exists || app.otherElements["defaultRendering"].exists)
         app.buttons["完成"].tap()
         app.buttons["sampleSDR"].tap()
@@ -165,6 +167,7 @@ final class PlaybackUITests: XCTestCase {
     func testDefaultPlayerHidesSettingsAndAutoHidesBackButton() {
         let app = XCUIApplication()
         app.launchArguments = ["--uitesting", "--test-auto-hide"]
+        app.launchArguments += ["-AppleLanguages", "(zh-Hans)"]
         app.launch()
         app.buttons["sampleSDR"].tap()
         XCTAssertFalse(app.segmentedControls["settingsTabs"].exists)
@@ -197,6 +200,7 @@ final class PlaybackUITests: XCTestCase {
     func testSettingsDefaultsApplyToNewVideoAndPersist() {
         let app = XCUIApplication()
         app.launchArguments = ["--uitesting", "--show-player-settings", "--preserve-defaults"]
+        app.launchArguments += ["-AppleLanguages", "(zh-Hans)"]
         app.launch()
         app.buttons["openSettings"].tap()
         app.buttons["defaultRendering"].tap()
@@ -204,13 +208,15 @@ final class PlaybackUITests: XCTestCase {
         for _ in 0..<6 where !app.buttons["defaultSubtitles"].exists { app.swipeUp() }
         app.buttons["defaultSubtitles"].tap()
         app.buttons["默认关闭"].tap()
+        XCTAssertTrue(app.buttons["完成"].exists, app.debugDescription)
         app.buttons["完成"].tap()
         app.buttons["sampleSDR"].tap()
         XCTAssertTrue(app.segmentedControls["renderingMode"].buttons["省电优先"].isSelected)
         app.segmentedControls["settingsTabs"].buttons["字幕"].tap()
         XCTAssertEqual(app.buttons["关闭字幕"].value as? String, "已选择")
         app.buttons["closePlayer"].tap()
-        app.terminate(); app.launch()
+        app.terminate(); app.launchArguments += ["-AppleLanguages", "(zh-Hans)"]
+        app.launch()
         app.buttons["sampleSDR"].tap()
         XCTAssertTrue(app.segmentedControls["renderingMode"].buttons["省电优先"].isSelected)
         app.segmentedControls["settingsTabs"].buttons["字幕"].tap()
@@ -230,7 +236,7 @@ final class PlaybackUITests: XCTestCase {
         let narrowWidth = surface.frame.width
         app.buttons["toggleSettings"].tap()
         assertViewportMatches(surface)
-        XCTAssertGreaterThan(surface.frame.width, narrowWidth * 1.1)
+        XCTAssertEqual(surface.frame.width, narrowWidth, accuracy: 1)
         for mode in ["填满屏幕（裁切）", "拉伸铺满", "适应屏幕"] {
             app.buttons["displayMenu"].tap()
             app.buttons.matching(NSPredicate(format: "label CONTAINS %@", mode)).firstMatch.tap()

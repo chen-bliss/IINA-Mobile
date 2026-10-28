@@ -2,6 +2,7 @@
 """Package an iOS device .app without any personal signing material."""
 import argparse
 from pathlib import Path
+import plistlib
 import shutil
 import subprocess
 import tempfile
@@ -17,6 +18,14 @@ with tempfile.TemporaryDirectory(prefix='iina-unsigned-') as temporary:
     payload.mkdir()
     app = payload / args.app.name
     subprocess.run(['ditto', str(args.app), str(app)], check=True)
+    # Static frameworks are already linked into the executable; embedding them
+    # adds redundant archives rather than loadable iOS libraries.
+    for framework in (app / 'Frameworks').glob('*.framework'):
+        info = plistlib.loads((framework / 'Info.plist').read_bytes())
+        binary = framework / info['CFBundleExecutable']
+        description = subprocess.check_output(['file', '-b', str(binary)], text=True)
+        if 'ar archive' in description:
+            shutil.rmtree(framework)
     for profile in app.rglob('embedded.mobileprovision'):
         profile.unlink()
     for signature in list(app.rglob('_CodeSignature')):

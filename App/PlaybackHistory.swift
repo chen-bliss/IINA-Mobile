@@ -64,7 +64,7 @@ struct HistoryResource: Codable, Equatable {
             return url
         }
     }
-    private var unavailable: NSError { NSError(domain: "History", code: 1, userInfo: [NSLocalizedDescriptionKey: "这个播放来源已不可用，请重新选择文件或添加服务器。"] ) }
+    private var unavailable: NSError { NSError(domain: "History", code: 1, userInfo: [NSLocalizedDescriptionKey: L("这个播放来源已不可用，请重新选择文件或添加服务器。")] ) }
     func forgetCredential() { if let credentialID { KeychainStore.remove(credentialID) } }
 }
 
@@ -76,6 +76,7 @@ struct HistoryEntry: Codable, Identifiable, Equatable {
     var position: Double = 0
     var duration: Double = 0
     var lastPlayed = Date()
+    var settings: VideoPlaybackSettings?
     var resumePosition: Double {
         guard position.isFinite, position > 0, duration <= 0 || (position < duration - 10 && position / duration < 0.98) else { return 0 }
         return position
@@ -86,6 +87,7 @@ final class PlaybackHistory: ObservableObject {
     @Published private(set) var entries: [HistoryEntry]
     private let defaults: UserDefaults
     private var lastWrites: [UUID: Date] = [:]
+    private var subtitleLocations: [UUID: [URL]] = [:]
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         entries = defaults.data(forKey: "history.v1").flatMap { try? JSONDecoder().decode([HistoryEntry].self, from: $0) } ?? []
@@ -105,8 +107,34 @@ final class PlaybackHistory: ObservableObject {
         while entries.count > 100 {
             let removed = entries.removeLast(); forget(removed)
         }
+        subtitleLocations[entry.id] = subtitles.isEmpty ? [] : item.subtitles
         persist()
         return entry.id
+    }
+    func prepared(_ item: PlaybackItem, servers: [SMBServer]) -> PlaybackItem {
+        guard let source = try? HistoryResource.capture(item.url, servers: servers) else { return item }
+        defer { source.forgetCredential() }
+        guard let entry = entries.first(where: { $0.source.identity == source.identity }) else { return item }
+        var prepared = item
+        prepared.settings = item.settings ?? entry.settings
+        var subtitles = entry.subtitles.compactMap { try? $0.resolve(servers: servers) }
+        for url in item.subtitles where !subtitles.contains(url) { subtitles.append(url) }
+        prepared.subtitles = subtitles
+        return prepared
+    }
+    func saveSettings(_ settings: VideoPlaybackSettings, subtitles: [URL], for id: UUID?, servers: [SMBServer]) {
+        guard let id, let index = entries.firstIndex(where: { $0.id == id }) else { return }
+        // Refresh external subtitle references as well, including subtitles added during playback.
+        let subtitlesChanged = subtitleLocations[id] != subtitles
+        guard entries[index].settings != settings || subtitlesChanged else { return }
+        if subtitlesChanged {
+            let resources = subtitles.compactMap { try? HistoryResource.capture($0, servers: servers) }
+            entries[index].subtitles.forEach { $0.forgetCredential() }
+            entries[index].subtitles = resources
+            subtitleLocations[id] = subtitles
+        }
+        entries[index].settings = settings
+        persist()
     }
     func update(_ id: UUID?, position: Double, duration: Double, force: Bool = false) {
         guard let id, position.isFinite, duration.isFinite, duration > 0,
@@ -120,13 +148,13 @@ final class PlaybackHistory: ObservableObject {
     func playback(for entry: HistoryEntry, servers: [SMBServer]) throws -> PlaybackItem {
         let url = try entry.source.resolve(servers: servers)
         let subtitles = entry.subtitles.compactMap { try? $0.resolve(servers: servers) }
-        return PlaybackItem(url: url, subtitles: subtitles, startPosition: AppPreferences.load().resumePlayback ? entry.resumePosition : 0)
+        return PlaybackItem(url: url, subtitles: subtitles, startPosition: AppPreferences.load().resumePlayback ? entry.resumePosition : 0, settings: entry.settings)
     }
     func remove(_ id: UUID) {
         if let entry = entries.first(where: { $0.id == id }) { forget(entry) }
-        entries.removeAll { $0.id == id }; lastWrites[id] = nil; persist()
+        entries.removeAll { $0.id == id }; lastWrites[id] = nil; subtitleLocations[id] = nil; persist()
     }
-    func clear() { entries.forEach(forget); entries = []; lastWrites = [:]; persist() }
+    func clear() { entries.forEach(forget); entries = []; lastWrites = [:]; subtitleLocations = [:]; persist() }
     private func forget(_ entry: HistoryEntry) { entry.source.forgetCredential(); entry.subtitles.forEach { $0.forgetCredential() } }
     private func persist() { defaults.set(try? JSONEncoder().encode(entries), forKey: "history.v1") }
 }

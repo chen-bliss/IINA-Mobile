@@ -28,4 +28,5 @@ struct PlaybackItem: Identifiable {
     let url: URL
     var subtitles: [URL] = []
     var startPosition: Double = 0
+    var settings: VideoPlaybackSettings?
 }

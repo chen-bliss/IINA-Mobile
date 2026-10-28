@@ -24,7 +24,7 @@ final class VideoLayer: CAMetalLayer {
 
 final class PlayerEngine: NSObject, ObservableObject {
     @Published var picture = AppPreferences.load().picture
-    @Published var title = "尚未播放"
+    @Published var title = L("尚未播放")
     @Published var isPlaying = false
     @Published var isLoaded = false
     @Published var isBuffering = false
@@ -48,6 +48,8 @@ final class PlayerEngine: NSObject, ObservableObject {
     var limitsRenderResolution: Bool { renderingMode == .energy || thermalProtectionActive }
     @Published var renderDimensions = CGSize.zero
     @Published var surfaceDimensions = CGSize.zero
+    @Published var videoRectangle = CGRect.zero
+    private var previewRegion: CGRect?
 
     private let worker = DispatchQueue(label: "org.iinamobile.player", qos: .userInitiated)
     private var handle: OpaquePointer?
@@ -67,14 +69,26 @@ final class PlayerEngine: NSObject, ObservableObject {
     private var scopedURLs: [URL] = []
     private var restorePosition: Double = 0
     private var restorePaused = false
-    private var restoreSubtitle = "auto"
-    private var restoreAudio = "auto"
     private var openedExternalSubtitles: [URL] = []
+    private var rememberedSubtitle = RememberedTrack(mode: "auto")
+    private var rememberedAudio = RememberedTrack(mode: "auto")
+    @Published private(set) var videoSettings = VideoPlaybackSettings()
+    private(set) var externalSubtitleURLs: [URL] = []
+
+    private func rememberChanges() {
+        var updated = videoSettings
+        updated.picture = picture; updated.display = display; updated.rendering = renderingMode
+        updated.subtitleDelay = subtitleDelay; updated.subtitleSize = subtitleSize; updated.speed = speed
+        if updated != videoSettings { videoSettings = updated }
+    }
     private var activeSettings = AppPreferences.load().picture
     private var activeSpeed: Double = 1
     private var activeSubtitleDelay: Double = 0
     private var activeSubtitleSize: Double = 40
     private var timer: Timer?
+    private var nativePlayback: PictureInPictureSession?
+    private var needsNativeRestore = false
+    private var nativeOutputSuspended = false
     private var lifecycleTokens: [NSObjectProtocol] = []
     #if DEBUG
     private let playbackDiagnostics = PlaybackDiagnostics()
@@ -85,7 +99,7 @@ final class PlayerEngine: NSObject, ObservableObject {
         super.init()
         let center = NotificationCenter.default
         lifecycleTokens.append(center.addObserver(forName: UIApplication.didEnterBackgroundNotification, object: nil, queue: .main) { [weak self] _ in
-            self?.setPaused(true)
+            if self?.nativePlayback == nil { self?.setPaused(true) }
         })
         lifecycleTokens.append(center.addObserver(forName: AVAudioSession.interruptionNotification, object: nil, queue: .main) { [weak self] _ in
             self?.setPaused(true)
@@ -110,7 +124,7 @@ final class PlayerEngine: NSObject, ObservableObject {
                 if let handle {
                     var wid = Int64(Int(bitPattern: Unmanaged.passUnretained(layer).toOpaque()))
                     withExtendedLifetime(previous) {
-                        check(mpv_set_property(handle, "wid", MPV_FORMAT_INT64, &wid), "更新播放画面")
+                        check(mpv_set_property(handle, "wid", MPV_FORMAT_INT64, &wid), L("更新播放画面"))
                     }
                 }
                 return
@@ -123,7 +137,7 @@ final class PlayerEngine: NSObject, ObservableObject {
     }
 
     private func createHandle() {
-        guard let renderLayer, let mpv = mpv_create() else { publishError("无法创建播放引擎。"); return }
+        guard let renderLayer, let mpv = mpv_create() else { publishError(L("无法创建播放引擎。")); return }
         handle = mpv
         #if DEBUG
         if ProcessInfo.processInfo.arguments.contains("--uitesting") || ProcessInfo.processInfo.arguments.contains("--diagnose-subtitles") {
@@ -131,7 +145,7 @@ final class PlayerEngine: NSObject, ObservableObject {
         }
         #endif
         var wid = Int64(Int(bitPattern: Unmanaged.passUnretained(renderLayer).toOpaque()))
-        check(mpv_set_option(mpv, "wid", MPV_FORMAT_INT64, &wid), "视频输出")
+        check(mpv_set_option(mpv, "wid", MPV_FORMAT_INT64, &wid), L("视频输出"))
         var options = [
             "vo": "gpu-next", "gpu-api": "vulkan", "gpu-context": "moltenvk",
             "hwdec": "videotoolbox", "keep-open": "yes", "idle": "yes",
@@ -150,18 +164,18 @@ final class PlayerEngine: NSObject, ObservableObject {
         }
         for (key, value) in options { check(mpv_set_option_string(mpv, key, value), key) }
         if activeSettings.hdrMode == .sdr {
-            check(mpv_set_option_string(mpv, "target-trc", "srgb"), "SDR 色彩")
-            check(mpv_set_option_string(mpv, "target-prim", "bt.709"), "SDR 色域")
+            check(mpv_set_option_string(mpv, "target-trc", "srgb"), L("SDR 色彩"))
+            check(mpv_set_option_string(mpv, "target-prim", "bt.709"), L("SDR 色域"))
         }
         for color in ColorControl.allCases {
             check(mpv_set_option_string(mpv, color.rawValue, String(Int(activeSettings[color]))), color.title)
         }
         let result = mpv_initialize(mpv)
         guard result >= 0 else {
-            publishError("播放引擎初始化失败：\(message(result))")
+            publishError(LF("播放引擎初始化失败：%@", message(result)))
             mpv_terminate_destroy(mpv); handle = nil; return
         }
-        check(smbStreams.register(with: mpv), "SMB 播放")
+        check(smbStreams.register(with: mpv), L("SMB 播放"))
         // Capture this mpv build's own defaults so returning to quality mode
         // restores every rendering option without touching HDR or color values.
         qualityRenderingOptions = smoothRenderingOptions.keys.reduce(into: [:]) { result, key in
@@ -176,11 +190,13 @@ final class PlayerEngine: NSObject, ObservableObject {
         }, Unmanaged.passUnretained(self).toOpaque())
     }
 
-    func open(_ url: URL, subtitles: [URL] = [], startAt: Double = 0) {
+    func open(_ url: URL, subtitles: [URL] = [], startAt: Double = 0, settings saved: VideoPlaybackSettings? = nil) {
         let defaults = AppPreferences.load()
-        picture = defaults.picture; display = defaults.display; renderingMode = defaults.rendering
-        subtitleSize = defaults.subtitleSize; subtitleDelay = 0; speed = 1
-        subtitleID = defaults.subtitles == .off ? "no" : "auto"
+        let settings = saved ?? VideoPlaybackSettings(defaults: defaults)
+        videoSettings = settings; externalSubtitleURLs = subtitles
+        picture = settings.picture; display = settings.display; renderingMode = settings.rendering
+        subtitleSize = settings.subtitleSize; subtitleDelay = settings.subtitleDelay; speed = settings.speed
+        subtitleID = settings.subtitle.mode == "no" ? "no" : "auto"
         position = max(0, startAt); duration = 0
         setControlsVisible(true)
         refreshThermalProtection()
@@ -193,17 +209,17 @@ final class PlayerEngine: NSObject, ObservableObject {
         do {
             try AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback)
             try AVAudioSession.sharedInstance().setActive(true)
-        } catch { self.error = "无法启动音频：\(error.localizedDescription)" }
+        } catch { self.error = LF("无法启动音频：%@", error.localizedDescription) }
         for resource in [url] + subtitles where resource.isFileURL {
             if resource.startAccessingSecurityScopedResource() { scopedURLs.append(resource) }
         }
         worker.async { [self] in
-            let recreate = handle != nil && activeSettings.hdrMode != defaults.picture.hdrMode
-            activeSettings = defaults.picture; activeDisplay = defaults.display; activeRenderingMode = defaults.rendering
-            activeSubtitlePreference = defaults.subtitles; activeSubtitleSize = defaults.subtitleSize; activeSubtitleDelay = 0
-            activeSpeed = 1
+            let recreate = handle != nil && activeSettings.hdrMode != settings.picture.hdrMode
+            activeSettings = settings.picture; activeDisplay = settings.display; activeRenderingMode = settings.rendering
+            activeSubtitlePreference = defaults.subtitles; activeSubtitleSize = settings.subtitleSize; activeSubtitleDelay = settings.subtitleDelay
+            activeSpeed = settings.speed
+            rememberedSubtitle = settings.subtitle; rememberedAudio = settings.audio
             restorePosition = max(0, startAt); restorePaused = false
-            restoreSubtitle = defaults.subtitles == .off ? "no" : "auto"; restoreAudio = "auto"
             openedExternalSubtitles = subtitles
             smbStreams.status.reset()
             if recreate { destroyHandle(); createHandle() }
@@ -225,12 +241,15 @@ final class PlayerEngine: NSObject, ObservableObject {
     }
 
     func close() {
+        nativePlayback?.stop()
+        needsNativeRestore = false
         timer?.invalidate(); timer = nil
         UIApplication.shared.isIdleTimerDisabled = false
         isPlaying = false; isLoaded = false; isBuffering = false
         let scopes = scopedURLs; scopedURLs = []
         worker.async { [self] in
             destroyHandle()
+            nativeOutputSuspended = false; previewRegion = nil
             smbStreams.reset()
             renderLayer = nil; currentURL = nil; pendingURL = nil; openedExternalSubtitles = []
             DispatchQueue.main.async { scopes.forEach { $0.stopAccessingSecurityScopedResource() } }
@@ -240,12 +259,14 @@ final class PlayerEngine: NSObject, ObservableObject {
     func setDisplay(fit: VideoFitMode? = nil, aspect: VideoAspect? = nil) {
         if let fit { display.fit = fit }
         if let aspect { display.aspect = aspect }
+        rememberChanges()
         let settings = display
         worker.async { [self] in activeDisplay = settings; applyDisplaySettings() }
     }
 
     func setRenderingMode(_ mode: RenderingMode) {
         renderingMode = mode
+        rememberChanges()
         worker.async { [self] in activeRenderingMode = mode; applyRenderingMode() }
     }
     private func applyRenderingMode() {
@@ -266,10 +287,55 @@ final class PlayerEngine: NSObject, ObservableObject {
         worker.async { [self] in thermalConstrained = constrained; if handle != nil { applyRenderingMode() } }
     }
 
+    func setPreviewRegion(_ rect: CGRect, canvas: CGSize) {
+        guard canvas.width > 1, canvas.height > 1 else { return }
+        let full = CGRect(origin: .zero, size: canvas)
+        let clipped = rect.intersection(full)
+        guard !clipped.isEmpty else { return }
+        let normalized: CGRect? = rect == full ? nil : CGRect(x: clipped.minX / canvas.width, y: clipped.minY / canvas.height,
+                                                             width: clipped.width / canvas.width, height: clipped.height / canvas.height)
+        worker.async { [self] in
+            guard previewRegion != normalized else { return }
+            previewRegion = normalized
+            applyDisplaySettings()
+        }
+    }
     private func applyDisplaySettings() {
-        setString("keepaspect", activeDisplay.fit == .stretch ? "no" : "yes")
-        setString("panscan", activeDisplay.fit == .fill ? "1" : "0")
+        let preview = previewRegion != nil
+        setString("keepaspect", !preview && activeDisplay.fit == .stretch ? "no" : "yes")
+        setString("panscan", !preview && activeDisplay.fit == .fill ? "1" : "0")
+        let region = previewRegion ?? CGRect(x: 0, y: 0, width: 1, height: 1)
+        setString("video-margin-ratio-left", String(Double(region.minX)))
+        setString("video-margin-ratio-right", String(Double(1 - region.maxX)))
+        setString("video-margin-ratio-top", String(Double(region.minY)))
+        setString("video-margin-ratio-bottom", String(Double(1 - region.maxY)))
+        setString("sub-use-margins", preview ? "no" : "yes")
         setString("video-aspect-override", activeDisplay.aspect.mpvValue)
+    }
+
+    func beginNativePlayback(_ session: PictureInPictureSession) {
+        nativePlayback = session
+        worker.async { [self] in nativeOutputSuspended = true; setString("pause", "yes"); setString("vo", "null") }
+    }
+    func endNativePlayback(position: Double, resume: Bool) {
+        nativePlayback = nil
+        self.position = position
+        let foreground = UIApplication.shared.applicationState == .active
+        needsNativeRestore = !foreground
+        worker.async { [self] in
+            if foreground { nativeOutputSuspended = false; setString("vo", "gpu-next"); applyDisplaySettings() }
+            command(["seek", String(max(0, position)), "absolute+exact"])
+            setString("pause", resume && foreground ? "no" : "yes")
+        }
+    }
+    func refreshAfterForeground() {
+        if needsNativeRestore {
+            needsNativeRestore = false
+            worker.async { [self] in nativeOutputSuspended = false; setString("vo", "gpu-next"); applyDisplaySettings() }
+        }
+        setControlsVisible(true)
+        refreshThermalProtection()
+        worker.async { [self] in refreshViewportIfNeeded() }
     }
 
     func viewportDidResize(_ size: CGSize) {
@@ -285,7 +351,7 @@ final class PlayerEngine: NSObject, ObservableObject {
     }
 
     private func refreshViewportIfNeeded() {
-        guard handle != nil, currentURL != nil, double("video-params/w") > 0 else { return }
+        guard !nativeOutputSuspended, handle != nil, currentURL != nil, double("video-params/w") > 0 else { return }
         let width = double("osd-dimensions/w"), height = double("osd-dimensions/h")
         guard abs(width - requestedViewport.width) > 2 || abs(height - requestedViewport.height) > 2 else { return }
         // The bundled MoltenVK context has no resize event handler. Recreate only the
@@ -305,6 +371,7 @@ final class PlayerEngine: NSObject, ObservableObject {
 
     func setColor(_ control: ColorControl, value: Double) {
         picture[control] = value.rounded()
+        rememberChanges()
         let applied = picture[control]
         worker.async { [self] in
             activeSettings[control] = applied
@@ -319,11 +386,11 @@ final class PlayerEngine: NSObject, ObservableObject {
     func setHDRMode(_ mode: HDRMode) {
         guard picture.hdrMode != mode else { return }
         picture.hdrMode = mode
+        rememberChanges()
         let settings = picture
         isBuffering = true
         worker.async { [self] in
             restorePosition = double("time-pos"); restorePaused = flag("pause")
-            restoreSubtitle = string("sid") ?? "auto"; restoreAudio = string("aid") ?? "auto"
             activeSettings = settings
             guard renderLayer != nil else {
                 DispatchQueue.main.async { self.isBuffering = false }
@@ -338,42 +405,62 @@ final class PlayerEngine: NSObject, ObservableObject {
     func setToneMapping(_ algorithm: String) {
         guard ["auto", "bt.2390", "hable", "reinhard", "clip"].contains(algorithm) else { return }
         picture.toneMapping = algorithm
+        rememberChanges()
         worker.async { [self] in activeSettings.toneMapping = algorithm; setString("tone-mapping", algorithm) }
     }
     func togglePause() {
+        if let nativePlayback {
+            if nativePlayback.player.rate == 0 { nativePlayback.player.playImmediately(atRate: Float(speed)) }
+            else { nativePlayback.player.pause() }
+            return
+        }
         worker.async { [self] in
             if flag("eof-reached") { command(["seek", "0", "absolute"]); setString("pause", "no") }
             else { setString("pause", flag("pause") ? "no" : "yes") }
         }
     }
-    func setPaused(_ paused: Bool) { worker.async { [self] in setString("pause", paused ? "yes" : "no") } }
-    func seek(_ time: Double) { worker.async { [self] in command(["seek", String(max(0, time)), "absolute+exact"]) } }
-    func skip(_ seconds: Double) { worker.async { [self] in command(["seek", String(seconds), "relative"]) } }
+    func setPaused(_ paused: Bool) { if let nativePlayback { if paused { nativePlayback.player.pause() }; return }; worker.async { [self] in setString("pause", paused ? "yes" : "no") } }
+    func seek(_ time: Double) { if let nativePlayback { nativePlayback.player.seek(to: CMTime(seconds: max(0, time), preferredTimescale: 600)); return }; worker.async { [self] in command(["seek", String(max(0, time)), "absolute+exact"]) } }
+    func skip(_ seconds: Double) { if nativePlayback != nil { seek(position + seconds); return }; worker.async { [self] in command(["seek", String(seconds), "relative"]) } }
     func setSpeed(_ value: Double) {
         speed = value
+        if let nativePlayback, nativePlayback.player.rate != 0 { nativePlayback.player.rate = Float(value) }
+        rememberChanges()
         worker.async { [self] in activeSpeed = value; setString("speed", String(value)) }
     }
     func selectSubtitle(_ id: String) {
         subtitleID = id
-        worker.async { [self] in setString("sid", id) }
+        let selection = RememberedTrack.capture(id, tracks: tracks, type: "sub")
+        videoSettings.subtitle = selection
+        worker.async { [self] in rememberedSubtitle = selection; setString("sid", id) }
     }
     func selectAudio(_ id: String) {
         audioID = id
-        worker.async { [self] in setString("aid", id) }
+        let selection = RememberedTrack.capture(id, tracks: tracks, type: "audio")
+        videoSettings.audio = selection
+        worker.async { [self] in rememberedAudio = selection; setString("aid", id) }
     }
     func setSubtitleDelay(_ value: Double) {
         subtitleDelay = value
+        rememberChanges()
         worker.async { [self] in activeSubtitleDelay = value; setString("sub-delay", String(value)) }
     }
     func setSubtitleSize(_ value: Double) {
         subtitleSize = value
+        rememberChanges()
         worker.async { [self] in activeSubtitleSize = value; setString("sub-font-size", String(value)) }
     }
     func addSubtitle(_ url: URL) {
+        externalSubtitleURLs.append(url)
         if url.isFileURL && url.startAccessingSecurityScopedResource() { scopedURLs.append(url) }
         worker.async { [self] in
             openedExternalSubtitles.append(url)
             command(["sub-add", smbStreams.mediaPath(url), "select"])
+            let id = string("sid") ?? "auto"
+            let all = MediaTrack.decode(string("track-list") ?? "[]")
+            rememberedSubtitle = .capture(id, tracks: all, type: "sub")
+            let selection = rememberedSubtitle
+            DispatchQueue.main.async { self.videoSettings.subtitle = selection }
         }
     }
     func screenshot() {
@@ -404,7 +491,9 @@ final class PlayerEngine: NSObject, ObservableObject {
                 for url in openedExternalSubtitles {
                     command(["sub-add", smbStreams.mediaPath(url), "auto"])
                 }
-                setString("sid", restoreSubtitle); setString("aid", restoreAudio)
+                let loadedTracks = MediaTrack.decode(string("track-list") ?? "[]")
+                setString("sid", rememberedSubtitle.resolve(in: loadedTracks, type: "sub"))
+                setString("aid", rememberedAudio.resolve(in: loadedTracks, type: "audio"))
                 setString("speed", String(activeSpeed))
                 setString("sub-delay", String(activeSubtitleDelay))
                 setString("sub-font-size", String(activeSubtitleSize))
@@ -414,7 +503,7 @@ final class PlayerEngine: NSObject, ObservableObject {
             case MPV_EVENT_END_FILE:
                 if let data = event.pointee.data?.assumingMemoryBound(to: mpv_event_end_file.self), data.pointee.error < 0 {
                     let code = data.pointee.error
-                    publishError(smbStreams.status.latest?.localizedDescription ?? "无法播放视频：\(message(code))。请检查文件格式、服务器权限和网络连接。")
+                    publishError(smbStreams.status.latest?.localizedDescription ?? LF("无法播放视频：%@。请检查文件格式、服务器权限和网络连接。", message(code)))
                 }
                 DispatchQueue.main.async { self.isBuffering = false }
             default: break
@@ -423,6 +512,13 @@ final class PlayerEngine: NSObject, ObservableObject {
     }
 
     private func poll() {
+        if let nativePlayback {
+            let value = nativePlayback.player.currentTime().seconds
+            if value.isFinite { position = value }
+            isPlaying = nativePlayback.player.rate != 0
+            isBuffering = nativePlayback.preparing || nativePlayback.player.timeControlStatus == .waitingToPlayAtSpecifiedRate
+            return
+        }
         worker.async { [weak self] in
             guard let self, handle != nil else { return }
             #if DEBUG
@@ -438,6 +534,9 @@ final class PlayerEngine: NSObject, ObservableObject {
             let width = Int(double("video-params/w")), height = Int(double("video-params/h"))
             let codec = string("video-codec") ?? ""
             let dimensions = CGSize(width: double("osd-dimensions/w"), height: double("osd-dimensions/h"))
+            let rectangle = CGRect(x: double("osd-dimensions/ml"), y: double("osd-dimensions/mt"),
+                                   width: max(0, dimensions.width - double("osd-dimensions/ml") - double("osd-dimensions/mr")),
+                                   height: max(0, dimensions.height - double("osd-dimensions/mt") - double("osd-dimensions/mb")))
             let outputLayer = renderLayer
             DispatchQueue.main.async { [weak self] in
                 guard let self else { return }
@@ -457,6 +556,7 @@ final class PlayerEngine: NSObject, ObservableObject {
                 if self.screenHeadroom != headroom { self.screenHeadroom = headroom }
                 if self.videoDetails != details { self.videoDetails = details }
                 if self.renderDimensions != dimensions { self.renderDimensions = dimensions }
+                if self.videoRectangle != rectangle { self.videoRectangle = rectangle }
             }
         }
     }
@@ -466,7 +566,7 @@ final class PlayerEngine: NSObject, ObservableObject {
         let allocated = args.map { strdup($0) }
         defer { allocated.forEach { free($0) } }
         var pointers: [UnsafePointer<CChar>?] = allocated.map { $0.map { UnsafePointer($0) } } + [nil]
-        check(mpv_command(handle, &pointers), "播放命令")
+        check(mpv_command(handle, &pointers), L("播放命令"))
     }
     private func setString(_ key: String, _ value: String) {
         guard let handle else { return }
@@ -503,6 +603,8 @@ final class PlayerEngine: NSObject, ObservableObject {
 final class PlayerSurfaceView: UIView {
     let videoLayer = VideoLayer()
     var onResize: ((CGSize) -> Void)?
+    var onSafeAreaChange: ((UIEdgeInsets) -> Void)?
+    private var previousSafeArea = UIEdgeInsets.zero
     private var previousDrawableSize = CGSize.zero
     var constrainResolution = false { didSet { if oldValue != constrainResolution { setNeedsLayout() } } }
     override init(frame: CGRect) {
@@ -518,6 +620,11 @@ final class PlayerSurfaceView: UIView {
     required init?(coder: NSCoder) { fatalError("init(coder:) unavailable") }
     override func layoutSubviews() {
         super.layoutSubviews()
+        let safe = window?.safeAreaInsets ?? safeAreaInsets
+        if safe != previousSafeArea {
+            previousSafeArea = safe
+            DispatchQueue.main.async { [weak self] in self?.onSafeAreaChange?(safe) }
+        }
         let nativeScale = window?.screen.nativeScale ?? traitCollection.displayScale
         let scale = RenderResolution.scale(size: bounds.size, nativeScale: nativeScale, constrained: constrainResolution)
         CATransaction.begin(); CATransaction.setDisableActions(true)

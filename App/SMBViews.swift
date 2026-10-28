@@ -2,6 +2,7 @@
 import SwiftUI
 
 struct ServerEditor: View {
+    @EnvironmentObject private var language: LanguageStore
     @ObservedObject var library: LibraryModel
     let existingServer: SMBServer?
     @Environment(\.dismiss) private var dismiss
@@ -26,22 +27,23 @@ struct ServerEditor: View {
         _password = State(initialValue: server.map { KeychainStore.password(for: $0.id) } ?? "")
     }
     var body: some View {
+        let _ = language.selection
         NavigationStack {
             Form {
-                Section("服务器") {
-                    TextField("名称，例如：家里的 NAS", text: $name).accessibilityIdentifier("serverName")
-                    TextField("地址，例如：192.168.1.10", text: $host).accessibilityIdentifier("serverHost")
+                Section(L("服务器")) {
+                    TextField(L("名称，例如：家里的 NAS"), text: $name).accessibilityIdentifier("serverName")
+                    TextField(L("地址，例如：192.168.1.10"), text: $host).accessibilityIdentifier("serverHost")
                         .keyboardType(.URL).textInputAutocapitalization(.never).autocorrectionDisabled()
-                    TextField("共享名称，留空可浏览共享列表", text: $share)
+                    TextField(L("共享名称，留空可浏览共享列表"), text: $share)
                         .textInputAutocapitalization(.never).autocorrectionDisabled()
-                    TextField("端口，默认 445", text: $port).keyboardType(.numberPad)
+                    TextField(L("端口，默认 445"), text: $port).keyboardType(.numberPad)
                 }
-                Section("登录") {
-                    TextField("用户名，访客可留空", text: $username).textInputAutocapitalization(.never).autocorrectionDisabled()
-                    SecureField("密码", text: $password)
-                    TextField("域，可选", text: $domain).textInputAutocapitalization(.never).autocorrectionDisabled()
+                Section(L("登录")) {
+                    TextField(L("用户名，访客可留空"), text: $username).textInputAutocapitalization(.never).autocorrectionDisabled()
+                    SecureField(L("密码"), text: $password)
+                    TextField(L("域，可选"), text: $domain).textInputAutocapitalization(.never).autocorrectionDisabled()
                 }
-                Section { Text("密码保存在 iPhone 钥匙串中。支持 SMB2 和 SMB3。手机需要能访问服务器所在网络。").font(.footnote).foregroundStyle(.secondary) }
+                Section { Text(L("密码保存在 iPhone 钥匙串中。支持 SMB2 和 SMB3。手机需要能访问服务器所在网络。")).font(.footnote).foregroundStyle(.secondary) }
                 Section {
                     Button {
                         guard let server = formServer() else { return }
@@ -49,23 +51,24 @@ struct ServerEditor: View {
                         Task {
                             do {
                                 let entries = try await SMBService.shared.list(server: server, path: server.rootURL?.path ?? "/", password: password)
-                                connectionMessage = "连接成功，找到 \(entries.count) 个项目。"
+                                connectionMessage = LF("连接成功，找到 %@ 个项目。", entries.count)
                             } catch { self.error = error.localizedDescription }
                             testing = false
                         }
                     } label: {
-                        HStack { Text("测试连接"); Spacer(); if testing { ProgressView() } }
+                        HStack { Text(L("测试连接")); Spacer(); if testing { ProgressView() } }
                     }.disabled(testing).accessibilityIdentifier("testSMBConnection")
                     if let connectionMessage { Text(connectionMessage).foregroundStyle(.green) }
                 }
-            }.navigationTitle(existingServer == nil ? "添加 SMB 服务器" : "编辑 SMB 服务器").navigationBarTitleDisplayMode(.inline)
-                .alert("服务器设置", isPresented: Binding(get: { error != nil }, set: { if !$0 { error = nil } })) {
-                    Button("好", role: .cancel) { error = nil }
+            }.navigationTitle(existingServer == nil ? L("添加 SMB 服务器") : L("编辑 SMB 服务器")).navigationBarTitleDisplayMode(.inline)
+        .toolbar(.visible, for: .navigationBar)
+                .alert(L("服务器设置"), isPresented: Binding(get: { error != nil }, set: { if !$0 { error = nil } })) {
+                    Button(L("好"), role: .cancel) { error = nil }
                 } message: { Text(error ?? "") }
                 .toolbar {
-                    ToolbarItem(placement: .cancellationAction) { Button("取消") { dismiss() } }
+                    ToolbarItem(placement: .cancellationAction) { Button(L("取消")) { dismiss() } }
                     ToolbarItem(placement: .confirmationAction) {
-                        Button("保存") {
+                        Button(L("保存")) {
                             guard let server = formServer() else { return }
                             do { try library.save(server, password: password); dismiss() }
                             catch { self.error = error.localizedDescription }
@@ -75,18 +78,19 @@ struct ServerEditor: View {
         }
     }
     private func formServer() -> SMBServer? {
-        if !port.isEmpty && Int(port) == nil { error = "端口应为 1 至 65535 的整数。"; return nil }
+        if !port.isEmpty && Int(port) == nil { error = L("端口应为 1 至 65535 的整数。"); return nil }
         var server = SMBServer(name: name.trimmingCharacters(in: .whitespacesAndNewlines),
                                host: host.trimmingCharacters(in: .whitespacesAndNewlines),
                                share: share.trimmingCharacters(in: .whitespacesAndNewlines),
                                username: username, domain: domain, port: Int(port))
         if let existingServer { server.id = existingServer.id }
-        guard server.isValid else { error = "请填写名称与服务器 IP 或主机名，地址中不需要 smb://。"; return nil }
+        guard server.isValid else { error = L("请填写名称与服务器 IP 或主机名，地址中不需要 smb://。"); return nil }
         return server
     }
 }
 
 struct SMBDirectoryView: View {
+    @EnvironmentObject private var language: LanguageStore
     let server: SMBServer
     let path: String
     let subtitlesOnly: Bool
@@ -96,17 +100,18 @@ struct SMBDirectoryView: View {
     @State private var error: String?
     @State private var query = ""
     var body: some View {
+        let _ = language.selection
         Group {
             if loading {
-                VStack(spacing: 16) { ProgressView(); Text("正在连接 \(server.name)…").foregroundStyle(.secondary) }
+                VStack(spacing: 16) { ProgressView(); Text(LF("正在连接 %@…", server.name)).foregroundStyle(.secondary) }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if let error {
                 ContentUnavailableView {
-                    Label("无法读取目录", systemImage: "wifi.exclamationmark")
-                } description: { Text(error) } actions: { Button("重试") { Task { await load() } } }
+                    Label(L("无法读取目录"), systemImage: "wifi.exclamationmark")
+                } description: { Text(error) } actions: { Button(L("重试")) { Task { await load() } } }
             } else {
                 List {
-                    if visibleEntries.isEmpty { Text("此目录没有\(subtitlesOnly ? "字幕" : "视频")文件。").foregroundStyle(.secondary) }
+                    if visibleEntries.isEmpty { Text(LF("此目录没有%@文件。", subtitlesOnly ? L("字幕") : L("视频"))).foregroundStyle(.secondary) }
                     ForEach(visibleEntries) { entry in
                         if entry.isDirectory {
                             NavigationLink {
@@ -116,11 +121,12 @@ struct SMBDirectoryView: View {
                             Button { select(entry) } label: { row(entry) }.buttonStyle(.plain)
                         }
                     }
-                }.searchable(text: $query, prompt: "搜索当前目录").refreshable { await load() }
+                }.searchable(text: $query, prompt: L("搜索当前目录")).refreshable { await load() }
             }
         }
         .navigationTitle(path == "/" || path == server.rootURL?.path ? server.name : (path as NSString).lastPathComponent)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.visible, for: .navigationBar)
         .task(id: path) { await load() }
     }
     private var visibleEntries: [SMBEntry] {
@@ -138,7 +144,7 @@ struct SMBDirectoryView: View {
     }
     private func select(_ entry: SMBEntry) {
         let password = KeychainStore.password(for: server.id)
-        guard let url = server.playbackURL(path: entry.path, password: password) else { error = "文件地址无效。"; return }
+        guard let url = server.playbackURL(path: entry.path, password: password) else { error = L("文件地址无效。"); return }
         let base = (entry.name as NSString).deletingPathExtension
         let subtitles = subtitlesOnly ? [] : entries.filter {
             $0.isSubtitle && (($0.name as NSString).deletingPathExtension == base || $0.name.hasPrefix(base + "."))

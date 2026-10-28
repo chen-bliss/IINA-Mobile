@@ -10,7 +10,7 @@ final class SMBService {
     private let queue = DispatchQueue(label: "org.iinamobile.smb", qos: .userInitiated)
     func list(server: SMBServer, path: String, password suppliedPassword: String? = nil) async throws -> [SMBEntry] {
         guard let root = server.rootURL, var c = URLComponents(url: root, resolvingAgainstBaseURL: false) else {
-            throw NSError(domain: "SMB", code: 1, userInfo: [NSLocalizedDescriptionKey: "服务器地址无效。"])
+            throw NSError(domain: "SMB", code: 1, userInfo: [NSLocalizedDescriptionKey: L("服务器地址无效。")])
         }
         c.path = path.isEmpty ? "/" : path
         guard c.url != nil else { throw URLError(.badURL) }

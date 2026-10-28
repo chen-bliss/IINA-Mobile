@@ -31,6 +31,6 @@ enum KeychainStore {
          kSecAttrAccount as String: id.uuidString]
     }
     private static func failure(_ code: OSStatus) -> NSError {
-        NSError(domain: NSOSStatusErrorDomain, code: Int(code), userInfo: [NSLocalizedDescriptionKey: "无法安全保存服务器密码（\(code)）。"])
+        NSError(domain: NSOSStatusErrorDomain, code: Int(code), userInfo: [NSLocalizedDescriptionKey: LF("无法安全保存服务器密码（%@）。", code)])
     }
 }

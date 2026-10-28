@@ -12,3 +12,5 @@ python3 Scripts/collect_libdovi_crates.py
 ```
 
 第二个脚本根据 libdovi 的 Cargo.lock 获取 Rust 依赖源码并校验；原站的非 GitHub 源码按 `ADDITIONAL-SOURCES.json` 中的地址获取。各组件许可证保留在各自源码归档中。部分构建工具的上游分支没有发布固定标签，清单记录本次归档解析出的提交，未声称它是上游构建时的工具提交。
+
+0.5.0 未变更第三方依赖，沿用 0.4.0 的[构建依赖](https://github.com/chen-bliss/IINA-Mobile/releases/download/v0.4.0/IINA-Mobile-0.4.0-Dependencies.zip)和[完整第三方源码归档](https://github.com/chen-bliss/IINA-Mobile/releases/download/v0.4.0/IINA-Mobile-0.4.0-ThirdPartySources.tar)。校验值见 0.5.0 Release 的 `SHA256SUMS.txt`。
