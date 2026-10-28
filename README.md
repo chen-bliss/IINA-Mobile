@@ -63,6 +63,8 @@ open IINAMobile.xcodeproj
 
 在 Xcode 的 Signing & Capabilities 中选择自己的开发团队，选中设备后运行。公开工程不预设开发团队，请使用自己的 Apple 开发账号签名。
 
+若签名时提示 Bundle Identifier 不可用，请将应用标识修改为自己唯一的标识后重新构建。
+
 Git 仓库不包含大型二进制依赖。首次构建前先运行下方脚本，或把 Release 中的 Dependencies.zip 解压到仓库根目录。`Vendor/MPVKit-Package.upstream.swift` 保存上游下载地址和 SHA-256。
 
 获取校验过的依赖：
