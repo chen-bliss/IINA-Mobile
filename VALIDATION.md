@@ -31,3 +31,13 @@
 实际电量消耗及持续发热仍需按设备、亮度、环境和片源长时间评估；不承诺具体节电比例。
 
 公开 IPA 已移除签名和设备描述文件，需自行签名安装。配对设备的个人签名包不在公开 Release 中提供。
+
+## 0.6.0 开发验证（2026-11-01）
+
+- 用户真机反馈：截图、A/B 循环和 SMB AirPlay 基本正常。后续的转换进度、字幕合成、缓存与 DLNA 尚未全部完成真实接收设备验收。
+- 自动化验证通过：内封字幕选择、外挂字幕合成与中间转换进度；SMB MKV 转换；缓存复用、失效与损坏文件拒绝；本地及 SMB HTTP 字节范围读取；UPnP 设备描述解析、SOAP 动作与错误处理；模拟 SSDP 接收设备发现；模拟接收端播放、暂停、跳转、停止及转换后 MKV 取流。
+- 界面测试通过：投屏菜单同时提供 AirPlay 和 DLNA，并能打开 DLNA 设备地址界面。
+- Release 无签名归档通过，版本 0.6.0，构建号 12，正式应用标识 com.iinamobile.player。
+- 当前指定账号仅有 App Store Connect App Manager 权限，Xcode 的 Certificates, Identifiers & Profiles 显示不可访问。未生成可上传 TestFlight 的签名归档，未上传、未发布。
+- iPhone 上 SSDP 搜索需要苹果批准的组播 entitlement 和对应描述文件。模板位于 Dependencies/DLNA-Multicast.entitlements，默认未启用该受限权限。授权前可手动输入 UPnP 设备描述地址。
+- DLNA 对本地、SMB 和转换文件的取流依赖手机 HTTP 服务。锁屏可能导致应用挂起；循环控制也依赖应用持续运行。本版不能承诺手机中转时锁屏连续播放。

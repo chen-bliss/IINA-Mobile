@@ -11,6 +11,8 @@ IINASMBFile *iina_smb_open(const char *server, const char *share, const char *pa
 int64_t iina_smb_read(IINASMBFile *file, char *buffer, uint64_t size);
 int64_t iina_smb_seek(IINASMBFile *file, int64_t offset);
 int64_t iina_smb_size(IINASMBFile *file);
+uint64_t iina_smb_mtime(IINASMBFile *file);
+uint64_t iina_smb_mtime_nsec(IINASMBFile *file);
 uint64_t iina_smb_network_reads(IINASMBFile *file);
 void iina_smb_cancel(IINASMBFile *file);
 void iina_smb_close(IINASMBFile *file);

@@ -8,6 +8,16 @@ final class LifecycleMemoryUITests: XCTestCase {
         app.launch()
         return app
     }
+    func testCastingMenuOffersDLNAAndAirPlay() {
+        let app = launch(["--qa-pip"])
+        let menu = app.buttons["castMenu"]
+        XCTAssertTrue(menu.waitForExistence(timeout: 20))
+        menu.tap()
+        XCTAssertTrue(app.buttons["AirPlay"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["DLNA"].exists)
+        app.buttons["DLNA"].tap()
+        XCTAssertTrue(app.textFields["dlnaAddress"].waitForExistence(timeout: 5))
+    }
     func testHomeButtonsAfterBackgroundAndOrientationChange() {
         defer { XCUIDevice.shared.orientation = .portrait }
         let app = launch()

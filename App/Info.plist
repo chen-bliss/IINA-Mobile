@@ -43,8 +43,10 @@
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>将视频截图保存到照片图库。</string>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>连接你添加的 SMB 服务器并播放其中的视频。</string>
+	<string>连接 SMB 服务器和局域网投屏设备，并播放视频。</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

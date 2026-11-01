@@ -32,6 +32,8 @@ struct PlayerScreen: View {
     @Environment(\.layoutDirection) private var direction
     @StateObject private var pip = PictureInPictureSession()
     @State private var confirmingPiP = false
+    @State private var choosingScreenshot = false
+    @State private var showingDLNA = false
     @State private var controlInsets = UIEdgeInsets.zero
     @State private var panel = 0
     @State private var importingSubtitle = false
@@ -87,6 +89,9 @@ struct PlayerScreen: View {
         .onChange(of: player.isLoaded) { _, loaded in
             if loaded { saveVideoSettings() }
             #if DEBUG
+            if loaded, ProcessInfo.processInfo.arguments.contains("--qa-capture") {
+                Task { try? await Task.sleep(for: .seconds(2)); player.screenshot(includeSubtitles: true) }
+            }
             if loaded, ProcessInfo.processInfo.arguments.contains("--pip-diagnostics") {
                 Task { try? await Task.sleep(for: .seconds(2)); pip.begin(url: item.url, engine: player) }
             }
@@ -125,6 +130,11 @@ struct PlayerScreen: View {
         } message: {
             Text(L("系统画中画适用于 MP4、MOV、M4V 和 HLS，支持 SMB。小窗使用系统画质，不应用调色；部分字幕和音轨可能不受支持。返回后会恢复此视频原有设置。"))
         }
+        .confirmationDialog(L("截图"), isPresented: $choosingScreenshot, titleVisibility: .visible) {
+            Button(L("带字幕截图")) { player.screenshot(includeSubtitles: true) }
+            Button(L("不带字幕截图")) { player.screenshot(includeSubtitles: false) }
+            Button(L("取消"), role: .cancel) { }
+        } message: { Text(L("截图将保存到“照片”，并在“文件”中保留一份。")) }
         .alert(L("播放提示"), isPresented: Binding(get: { player.error != nil }, set: { if !$0 { player.error = nil } })) {
             Button(L("好"), role: .cancel) { player.error = nil }
         } message: { Text(player.error ?? "") }
@@ -149,6 +159,12 @@ struct PlayerScreen: View {
                 .onTapGesture(count: 2) { player.togglePause() }
                 .onTapGesture { controlsVisible.toggle() }
             if pip.routing { PictureInPictureSurface(session: pip).allowsHitTesting(false) }
+            if pip.airPlayMode && pip.externalPlaybackActive {
+                ZStack {
+                    Color.black
+                    Text(L("正在通过 AirPlay 播放")).foregroundStyle(.secondary)
+                }.contentShape(Rectangle()).onTapGesture { controlsVisible.toggle() }
+            }
             if pip.active {
                 VStack(spacing: 16) {
                     Text(L("正在画中画播放")).foregroundStyle(.secondary)
@@ -157,7 +173,16 @@ struct PlayerScreen: View {
                         .accessibilityValue(ProcessInfo.processInfo.arguments.contains("--uitesting") ? String(Int(player.position)) : "")
                 }
             }
-            if player.isBuffering { ProgressView().tint(.white).scaleEffect(1.4).allowsHitTesting(false) }
+            if pip.convertingForAirPlay {
+                VStack(spacing: 12) {
+                    if let progress = pip.conversionProgress {
+                        ProgressView(value: progress).tint(.white).frame(maxWidth: 240)
+                        Text(progress.formatted(.percent.precision(.fractionLength(0)))).monospacedDigit()
+                    } else { ProgressView().tint(.white) }
+                    Text(pip.checkingConversionCache ? L("正在检查已有的转换文件。") : L("正在转换 MKV 以便投屏，请保持应用打开。当前选中的字幕会合成到画面；转换可能改变画质和动态范围。"))
+                        .font(.subheadline).multilineTextAlignment(.center)
+                }.padding().background(.black.opacity(0.8), in: RoundedRectangle(cornerRadius: 12))
+            } else if player.isBuffering { ProgressView().tint(.white).scaleEffect(1.4).allowsHitTesting(false) }
             GeometryReader { controlsGeometry in
             VStack {
                 HStack(spacing: 8) {
@@ -174,6 +199,25 @@ struct PlayerScreen: View {
                             Image(systemName: pip.active ? "pip.exit" : "pip.enter")
                                 .frame(width: 52, height: 52).contentShape(Rectangle()).background(.black.opacity(0.5), in: Circle())
                         }.accessibilityLabel(L("画中画")).accessibilityIdentifier("pictureInPicture").accessibilityValue(pip.active ? "active" : pip.preparing ? "preparing" : "inactive")
+                        if pip.airPlayMode {
+                            if pip.preparing {
+                                ProgressView().tint(.white).frame(width: 52, height: 52).background(.black.opacity(0.5), in: Circle())
+                                    .accessibilityLabel(L("正在准备投屏"))
+                            } else {
+                                AirPlayPicker(player: pip.player).frame(width: 52, height: 52).background(.black.opacity(0.5), in: Circle())
+                                    .accessibilityLabel(L("选择 AirPlay 设备"))
+                            }
+                            Button { pip.returnToPlayer() } label: { Image(systemName: "xmark").frame(width: 52, height: 52).contentShape(Rectangle()).background(.black.opacity(0.5), in: Circle()) }
+                                .accessibilityLabel(L("结束投屏"))
+                        } else {
+                            Menu {
+                                Button("AirPlay") { settingsVisible = false; pip.begin(url: item.url, engine: player, airPlay: true) }
+                                Button("DLNA") { settingsVisible = false; showingDLNA = true }
+                            } label: {
+                                Image(systemName: "airplayvideo").frame(width: 52, height: 52).contentShape(Rectangle()).background(.black.opacity(0.5), in: Circle())
+                            }.disabled(pip.routing).accessibilityLabel(L("投屏")).accessibilityIdentifier("castMenu")
+                                .sheet(isPresented: $showingDLNA) { DLNAControlView(source: item.url, engine: player) }
+                        }
                         displayMenu
                         Button { if pip.routing { pip.returnToPlayer() }; settingsVisible.toggle() } label: {
                             Image(systemName: settingsVisible ? "sidebar.right" : "slider.horizontal.3")
@@ -220,11 +264,18 @@ struct PlayerScreen: View {
         VStack(spacing: 10) {
             HStack(spacing: 12) {
                 Text(time(seeking ? seekPosition : player.position)).monospacedDigit()
-                Slider(value: Binding(get: { seeking ? seekPosition : min(player.position, max(player.duration, 1)) }, set: { seekPosition = $0 }),
+                Slider(value: Binding(get: { seeking ? seekPosition : min(player.position, max(player.duration, 1)) }, set: { seeking = true; seekPosition = $0 }),
                        in: 0...max(player.duration, 1), onEditingChanged: { editing in
-                    if editing { seekPosition = player.position; seeking = true }
+                    if editing { if !seeking { seekPosition = player.position; seeking = true } }
                     else { player.seek(seekPosition); seeking = false }
-                }).accessibilityLabel(L("播放进度")).disabled(player.duration <= 0)
+                }).overlay {
+                    GeometryReader { geometry in
+                        ForEach([player.loopA, player.loopB].compactMap { $0 }, id: \.self) { point in
+                            Rectangle().fill(.yellow).frame(width: 2, height: 12)
+                                .position(x: 8 + max(0, geometry.size.width - 16) * min(1, point / max(player.duration, 1)), y: geometry.size.height / 2)
+                        }
+                    }.allowsHitTesting(false)
+                }.accessibilityLabel(L("播放进度")).disabled(player.duration <= 0)
                 Text(time(player.duration)).monospacedDigit()
             }.font(.caption)
             HStack(spacing: 30) {
@@ -239,7 +290,10 @@ struct PlayerScreen: View {
                     .accessibilityLabel(player.isPlaying ? L("暂停") : L("播放")).accessibilityIdentifier("togglePlayback")
                 Button { player.skip(10) } label: { Image(systemName: "goforward.10").font(.title2) }.accessibilityLabel(L("前进十秒"))
                 Spacer(minLength: 0)
-                Button { player.screenshot() } label: { Image(systemName: "camera").font(.title3).frame(width: 42) }.accessibilityLabel(L("截图到文件"))
+                Button { player.advanceLoop() } label: {
+                    Text(player.loopB != nil ? "AB ✓" : player.loopA != nil ? "A–B" : "A/B").font(.caption.bold()).frame(width: 42)
+                }.accessibilityLabel(L("设置或清除 A B 循环"))
+                Button { choosingScreenshot = true } label: { Image(systemName: "camera").font(.title3).frame(width: 42) }.accessibilityLabel(L("截图到文件"))
             }
         }
     }
@@ -372,5 +426,305 @@ struct PlayerScreen: View {
     private func time(_ seconds: Double) -> String {
         let s = Int(max(0, seconds.isFinite ? seconds : 0))
         return s >= 3600 ? String(format: "%d:%02d:%02d", s / 3600, s / 60 % 60, s % 60) : String(format: "%02d:%02d", s / 60, s % 60)
+    }
+}
+
+private struct DLNAFoundDevice: Identifiable {
+    let address: URL
+    let renderer: DLNARenderer
+    var id: URL { address }
+}
+
+private struct DLNAControlView: View {
+    let source: URL
+    @ObservedObject var engine: PlayerEngine
+    @Environment(\.dismiss) private var dismiss
+    @State private var descriptionAddress = ""
+    @State private var searching = false
+    @State private var foundDevices: [DLNAFoundDevice] = []
+    @State private var searchMessage: String?
+    @State private var renderer: DLNARenderer?
+    @State private var bridge: SMBHTTPBridge?
+    @State private var busy = false
+    @State private var playing = false
+    @State private var wasPlaying = false
+    @State private var remotePosition: Double = 0
+    @State private var remoteDuration: Double = 0
+    @State private var seekValue: Double = 0
+    @State private var seeking = false
+    @State private var message: String?
+    @State private var allowLocalDisconnect = false
+    @State private var polling: Task<Void, Never>?
+    @State private var loopSeeking = false
+    @State private var loopA: Double?
+    @State private var loopB: Double?
+    @State private var connectTask: Task<Void, Never>?
+    @State private var conversion: AirPlayTranscoder?
+    @State private var convertedTemporary: URL?
+    @State private var conversionProgress: Double?
+    @State private var converting = false
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                if let renderer {
+                    Section(L("投屏设备")) {
+                        Text(renderer.name)
+                        HStack {
+                            Text(dlnaTime(seeking ? seekValue : remotePosition)).monospacedDigit()
+                            Slider(value: Binding(get: { seeking ? seekValue : min(remotePosition, max(remoteDuration, 1)) }, set: { seeking = true; seekValue = $0 }), in: 0...max(remoteDuration, 1), onEditingChanged: { editing in
+                                if editing { if !seeking { seekValue = remotePosition; seeking = true } }
+                                else { let target = seekValue; seeking = false; Task { await seek(to: target) } }
+                            }).overlay {
+                                GeometryReader { geometry in
+                                    ForEach([loopA, loopB].compactMap { $0 }, id: \.self) { point in
+                                        Rectangle().fill(.yellow).frame(width: 2, height: 12)
+                                            .position(x: 8 + max(0, geometry.size.width - 16) * min(1, point / max(remoteDuration, 1)), y: geometry.size.height / 2)
+                                    }
+                                }.allowsHitTesting(false)
+                            }.disabled(remoteDuration <= 0 || busy)
+                            Text(dlnaTime(remoteDuration)).monospacedDigit()
+                        }
+                        HStack {
+                            Spacer()
+                            Button(playing ? L("暂停") : L("播放")) { Task { await togglePlayback() } }.disabled(busy)
+                            Spacer()
+                            Button(loopB != nil ? "AB ✓" : loopA != nil ? "A–B" : "A/B") { Task { await advanceLoop() } }.disabled(busy)
+                            Spacer()
+                            Button(L("结束投屏"), role: .destructive) { Task { await finish() } }.disabled(busy)
+                            Spacer()
+                        }
+                    }
+                } else {
+                    Section(L("搜索 DLNA 设备")) {
+                        Button { Task { await search() } } label: {
+                            HStack { Text(L("搜索设备")); if searching { Spacer(); ProgressView() } }
+                        }.disabled(busy || searching)
+                        ForEach(foundDevices) { found in
+                            Button(found.renderer.name) {
+                                descriptionAddress = found.address.absoluteString
+                                connectTask = Task { await connect() }
+                            }.disabled(busy || searching)
+                        }
+                        if let searchMessage { Text(searchMessage).font(.footnote).foregroundStyle(.secondary) }
+                    }
+                    Section(L("DLNA 设备地址")) {
+                        TextField("http://192.168.1.2:port/description.xml", text: $descriptionAddress)
+                            .accessibilityIdentifier("dlnaAddress")
+                            .keyboardType(.URL).textInputAutocapitalization(.never).autocorrectionDisabled()
+                        Text(L("请输入接收设备的 UPnP 设备描述地址。手机和接收设备需要连接同一局域网。"))
+                            .font(.footnote).foregroundStyle(.secondary)
+                        Button(L("连接并播放")) { connectTask = Task { await connect() } }.disabled(busy || descriptionAddress.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    }
+                }
+                Section {
+                    Text(L("接收设备必须支持视频的编码和容器。手机文件和 SMB 视频由手机临时提供，锁屏后能否继续取决于系统后台运行状态；网络直链由接收设备读取。MKV 会先转换并合成所选字幕，其他格式的字幕支持取决于接收设备。"))
+                        .font(.footnote).foregroundStyle(.secondary)
+                }
+            }
+            .navigationTitle("DLNA")
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button(L("关闭")) { Task { await finish() } }.disabled(busy) } }
+            .overlay {
+                if busy {
+                    VStack(spacing: 12) {
+                        if converting, let conversionProgress {
+                            ProgressView(value: conversionProgress).frame(maxWidth: 240)
+                            Text(conversionProgress.formatted(.percent.precision(.fractionLength(0)))).monospacedDigit()
+                        } else { ProgressView() }
+                        if converting { Text(L("正在准备兼容视频，请保持应用打开。字幕将合成在画面中。")) }
+                        if renderer == nil { Button(L("取消")) { conversion?.cancel(); connectTask?.cancel() } }
+                    }.padding().background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+                }
+            }
+            .alert(L("投屏提示"), isPresented: Binding(get: { message != nil }, set: { if !$0 { message = nil } })) {
+                if allowLocalDisconnect {
+                    Button(L("仅断开本机"), role: .destructive) { Task { await finish(force: true) } }
+                }
+                Button(L("好"), role: .cancel) { message = nil; allowLocalDisconnect = false }
+            } message: { Text(message ?? "") }
+            .interactiveDismissDisabled(renderer != nil || busy)
+            .onDisappear {
+                polling?.cancel(); connectTask?.cancel(); conversion?.cancel(); bridge?.stop()
+                if let convertedTemporary { try? FileManager.default.removeItem(at: convertedTemporary) }
+                if let renderer { Task { try? await renderer.stop() } }
+            }
+        }.preferredColorScheme(.dark)
+    }
+    private func search() async {
+        guard !searching else { return }
+        searching = true; searchMessage = nil; foundDevices = []
+        defer { searching = false }
+        do {
+            let locations = try await DLNADiscovery.search()
+            let config = URLSessionConfiguration.ephemeral
+            config.timeoutIntervalForRequest = 4; config.timeoutIntervalForResource = 6
+            let session = URLSession(configuration: config)
+            defer { session.invalidateAndCancel() }
+            let devices = await withTaskGroup(of: DLNAFoundDevice?.self, returning: [DLNAFoundDevice].self) { group in
+                for address in locations.prefix(32) {
+                    group.addTask {
+                        guard let device = try? await DLNARenderer.load(descriptionURL: address, session: session) else { return nil }
+                        return DLNAFoundDevice(address: address, renderer: device)
+                    }
+                }
+                var result: [DLNAFoundDevice] = []
+                for await device in group { if let device { result.append(device) } }
+                return result
+            }
+            foundDevices = devices.sorted { $0.renderer.name.localizedStandardCompare($1.renderer.name) == .orderedAscending }
+            if foundDevices.isEmpty { searchMessage = L("未找到设备，请确认设备已开启并与手机连接同一局域网，也可手动输入设备地址。") }
+        } catch {
+            searchMessage = L("自动搜索不可用，请检查局域网权限或手动输入设备地址。")
+        }
+    }
+    private func connect() async {
+        guard let url = URL(string: descriptionAddress.trimmingCharacters(in: .whitespacesAndNewlines)) else { message = L("设备地址无效。"); return }
+        busy = true; wasPlaying = engine.isPlaying
+        let startPosition = engine.position
+        engine.setPaused(true)
+        var candidate: DLNARenderer?
+        var didSetURI = false
+        var startedBridge: SMBHTTPBridge?
+        do {
+            let device = try await DLNARenderer.load(descriptionURL: url); candidate = device
+            try Task.checkCancellation()
+            var castSource = source
+            if source.pathExtension.lowercased() == "mkv" {
+                converting = true; conversionProgress = nil
+                castSource = try await prepareMKV()
+                converting = false
+                try Task.checkCancellation()
+            }
+            let media: URL
+            if castSource.isFileURL || castSource.scheme?.lowercased() == "smb" {
+                let relay = SMBHTTPBridge(source: castSource); startedBridge = relay
+                media = try await relay.start()
+            } else if ["http", "https"].contains(castSource.scheme?.lowercased() ?? ""), castSource.user == nil, castSource.password == nil {
+                media = castSource
+            } else { throw URLError(.unsupportedURL) }
+            try Task.checkCancellation()
+            try await device.setURI(media)
+            didSetURI = true
+            try Task.checkCancellation()
+            try await device.play()
+            try Task.checkCancellation()
+            var actualStart = startPosition
+            if startPosition > 1 {
+                do { try await device.seek(seconds: startPosition) }
+                catch { actualStart = 0; message = L("接收设备不支持恢复进度，已从头播放。") }
+            }
+            try Task.checkCancellation()
+            renderer = device; bridge = startedBridge; playing = true; remotePosition = actualStart; remoteDuration = engine.duration
+            loopA = engine.loopA; loopB = engine.loopB
+            polling = Task { await poll(device) }
+        } catch {
+            if didSetURI, let candidate { _ = await Task.detached { try? await candidate.stop() }.value }
+            startedBridge?.stop(); engine.setPaused(!wasPlaying)
+            if let convertedTemporary { try? FileManager.default.removeItem(at: convertedTemporary); self.convertedTemporary = nil }
+            if !(error is CancellationError) { message = LF("无法开始 DLNA 播放：%@", error.localizedDescription) }
+        }
+        conversion = nil; converting = false; busy = false; connectTask = nil
+    }
+    private func prepareMKV() async throws -> URL {
+        let subtitleValue = RememberedTrack.capture(engine.subtitleID, tracks: engine.tracks, type: "sub")
+        let subtitle = subtitleValue.mode == "auto" ? engine.videoSettings.subtitle : subtitleValue
+        let subtitles = engine.externalSubtitleURLs, audio = engine.audioID
+        let delay = engine.subtitleDelay, size = engine.subtitleSize
+        let cache = AirPlayConversionCache()
+        let key = try await Task.detached(priority: .userInitiated) {
+            try cache.key(source: source, audioID: audio, subtitle: subtitle, externalSubtitles: subtitles, subtitleDelay: delay, subtitleSize: size)
+        }.value
+        try Task.checkCancellation()
+        if let key, let url = try await cache.reusableURL(for: key) { return url }
+        try Task.checkCancellation()
+        let directory = try cache.directory()
+        let partial = directory.appendingPathComponent("partial-\(UUID().uuidString).mp4")
+        convertedTemporary = partial
+        let converter = AirPlayTranscoder(); conversion = converter
+        try await converter.convert(source: source, output: partial, audioID: audio, subtitle: subtitle,
+                                    externalSubtitles: subtitles, subtitleDelay: delay, subtitleSize: size) { fraction in
+            DispatchQueue.main.async { if conversion === converter && converting { conversionProgress = fraction } }
+        }
+        try Task.checkCancellation()
+        if let key {
+            let current = try await Task.detached(priority: .userInitiated) {
+                try cache.key(source: source, audioID: audio, subtitle: subtitle, externalSubtitles: subtitles, subtitleDelay: delay, subtitleSize: size)
+            }.value
+            try Task.checkCancellation()
+            guard current == key else { throw NSError(domain: "DLNA", code: 3, userInfo: [NSLocalizedDescriptionKey: L("转换期间原视频或字幕发生变化，请重试。")]) }
+            let target = try cache.url(for: key)
+            if FileManager.default.fileExists(atPath: target.path) { try FileManager.default.removeItem(at: target) }
+            try FileManager.default.moveItem(at: partial, to: target)
+            convertedTemporary = nil
+            return target
+        }
+        return partial
+    }
+    private func togglePlayback() async {
+        guard let renderer else { return }; busy = true
+        do { if playing { try await renderer.pause() } else { try await renderer.play() }; playing.toggle() }
+        catch { message = LF("接收设备未完成操作：%@", error.localizedDescription) }
+        busy = false
+    }
+    private func seek(to value: Double) async {
+        guard let renderer else { return }
+        var target = value
+        if let a = loopA, let b = loopB { target = min(max(target, a), max(a, b - 0.05)) }
+        do { try await renderer.seek(seconds: target); remotePosition = target }
+        catch { message = LF("接收设备不支持跳转：%@", error.localizedDescription) }
+    }
+    private func advanceLoop() async {
+        if loopA == nil { loopA = remotePosition }
+        else if loopB == nil {
+            guard let a = loopA, remotePosition > a + 0.1 else { message = L("B 点必须在 A 点之后。"); return }
+            loopB = remotePosition
+            await seek(to: a)
+        } else { loopA = nil; loopB = nil }
+    }
+    private func poll(_ device: DLNARenderer) async {
+        while !Task.isCancelled {
+            do {
+                let data = try await device.action("GetPositionInfo", arguments: [("InstanceID", "0")])
+                guard !Task.isCancelled else { return }
+                let status = try? await device.action("GetTransportInfo", arguments: [("InstanceID", "0")])
+                if let status, let state = DLNAPosition.state(status) {
+                    if state == "PLAYING" { playing = true }
+                    else if state == "PAUSED_PLAYBACK" || state == "STOPPED" { playing = false }
+                }
+                guard !Task.isCancelled else { return }
+                if let info = DLNAPosition.read(data) {
+                    remotePosition = info.position
+                    if info.duration > 0 { remoteDuration = info.duration }
+                    if playing, let a = loopA, let b = loopB, info.position >= b, !loopSeeking {
+                        loopSeeking = true
+                        do { try await device.seek(seconds: a); remotePosition = a }
+                        catch { loopA = nil; loopB = nil; message = L("接收设备未能跳转，已关闭 A/B 循环。") }
+                        loopSeeking = false
+                    }
+                }
+            } catch { loopSeeking = false }
+            try? await Task.sleep(for: .seconds(1))
+        }
+    }
+    private func finish(force: Bool = false) async {
+        guard !busy else { return }; busy = true
+        if let renderer, !force {
+            do { try await renderer.stop() }
+            catch {
+                allowLocalDisconnect = true
+                message = L("无法让接收设备停止播放。可以重试，或仅断开本机；接收设备可能继续播放。")
+                busy = false; return
+            }
+        }
+        polling?.cancel(); polling = nil
+        if renderer != nil { engine.restoreLoopPoints(a: loopA, b: loopB); engine.seek(remotePosition); engine.setPaused(!playing) }
+        allowLocalDisconnect = false
+        bridge?.stop(); bridge = nil
+        if let convertedTemporary { try? FileManager.default.removeItem(at: convertedTemporary); self.convertedTemporary = nil }
+        renderer = nil; busy = false; dismiss()
+    }
+    private func dlnaTime(_ value: Double) -> String {
+        guard value.isFinite else { return "0:00" }
+        let n = Int(max(0, value)); return n >= 3600 ? String(format: "%d:%02d:%02d", n / 3600, n / 60 % 60, n % 60) : String(format: "%d:%02d", n / 60, n % 60)
     }
 }

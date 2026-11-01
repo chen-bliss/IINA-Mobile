@@ -6,6 +6,9 @@ import Combine
 import Libmpv
 import Metal
 import UIKit
+import ImageIO
+import Photos
+import UniformTypeIdentifiers
 
 final class VideoLayer: CAMetalLayer {
     override var drawableSize: CGSize {
@@ -30,6 +33,8 @@ final class PlayerEngine: NSObject, ObservableObject {
     @Published var isBuffering = false
     @Published var position: Double = 0
     @Published var duration: Double = 0
+    @Published private(set) var loopA: Double?
+    @Published private(set) var loopB: Double?
     @Published var tracks: [MediaTrack] = []
     @Published var subtitleID = "auto"
     @Published var audioID = "auto"
@@ -101,8 +106,11 @@ final class PlayerEngine: NSObject, ObservableObject {
         lifecycleTokens.append(center.addObserver(forName: UIApplication.didEnterBackgroundNotification, object: nil, queue: .main) { [weak self] _ in
             if self?.nativePlayback == nil { self?.setPaused(true) }
         })
-        lifecycleTokens.append(center.addObserver(forName: AVAudioSession.interruptionNotification, object: nil, queue: .main) { [weak self] _ in
-            self?.setPaused(true)
+        lifecycleTokens.append(center.addObserver(forName: AVAudioSession.interruptionNotification, object: nil, queue: .main) { [weak self] notification in
+            guard let self, self.nativePlayback == nil,
+                  let raw = notification.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt,
+                  AVAudioSession.InterruptionType(rawValue: raw) == .began else { return }
+            self.setPaused(true)
         })
         lifecycleTokens.append(center.addObserver(forName: ProcessInfo.thermalStateDidChangeNotification, object: nil, queue: .main) { [weak self] _ in
             self?.refreshThermalProtection()
@@ -197,7 +205,7 @@ final class PlayerEngine: NSObject, ObservableObject {
         picture = settings.picture; display = settings.display; renderingMode = settings.rendering
         subtitleSize = settings.subtitleSize; subtitleDelay = settings.subtitleDelay; speed = settings.speed
         subtitleID = settings.subtitle.mode == "no" ? "no" : "auto"
-        position = max(0, startAt); duration = 0
+        position = max(0, startAt); duration = 0; loopA = nil; loopB = nil
         setControlsVisible(true)
         refreshThermalProtection()
         error = nil
@@ -410,8 +418,8 @@ final class PlayerEngine: NSObject, ObservableObject {
     }
     func togglePause() {
         if let nativePlayback {
-            if nativePlayback.player.rate == 0 { nativePlayback.player.playImmediately(atRate: Float(speed)) }
-            else { nativePlayback.player.pause() }
+            let playing = nativePlayback.airPlayMode ? nativePlayback.wantsPlayback : nativePlayback.player.timeControlStatus != .paused
+            nativePlayback.setPlaybackWanted(!playing, speed: speed)
             return
         }
         worker.async { [self] in
@@ -419,9 +427,16 @@ final class PlayerEngine: NSObject, ObservableObject {
             else { setString("pause", flag("pause") ? "no" : "yes") }
         }
     }
-    func setPaused(_ paused: Bool) { if let nativePlayback { if paused { nativePlayback.player.pause() }; return }; worker.async { [self] in setString("pause", paused ? "yes" : "no") } }
-    func seek(_ time: Double) { if let nativePlayback { nativePlayback.player.seek(to: CMTime(seconds: max(0, time), preferredTimescale: 600)); return }; worker.async { [self] in command(["seek", String(max(0, time)), "absolute+exact"]) } }
-    func skip(_ seconds: Double) { if nativePlayback != nil { seek(position + seconds); return }; worker.async { [self] in command(["seek", String(seconds), "relative"]) } }
+    func setPaused(_ paused: Bool) { if let nativePlayback { nativePlayback.setPlaybackWanted(!paused, speed: speed); return }; worker.async { [self] in setString("pause", paused ? "yes" : "no") } }
+    func seek(_ time: Double) {
+        var target = max(0, time)
+        if let a = loopA, let b = loopB { target = min(max(target, a), max(a, b - 0.05)) }
+        position = target
+        if let nativePlayback { nativePlayback.player.seek(to: CMTime(seconds: target, preferredTimescale: 600)); return }
+        let seekTarget = target
+        worker.async { [self] in command(["seek", String(seekTarget), "absolute+exact"]) }
+    }
+    func skip(_ seconds: Double) { seek(position + seconds) }
     func setSpeed(_ value: Double) {
         speed = value
         if let nativePlayback, nativePlayback.player.rate != 0 { nativePlayback.player.rate = Float(value) }
@@ -463,10 +478,84 @@ final class PlayerEngine: NSObject, ObservableObject {
             DispatchQueue.main.async { self.videoSettings.subtitle = selection }
         }
     }
-    func screenshot() {
+    func advanceLoop() {
+        guard isLoaded else { return }
+        if loopA == nil { loopA = position }
+        else if loopB == nil {
+            guard let a = loopA, position > a + 0.1 else { error = L("B 点必须在 A 点之后。"); return }
+            loopB = position
+        } else { loopA = nil; loopB = nil }
+        let a = loopA, b = loopB
+        nativePlayback?.updateLoop(a: a, b: b)
+        if let nativePlayback, let a, b != nil { nativePlayback.player.seek(to: CMTime(seconds: a, preferredTimescale: 600)) }
+        worker.async { [self] in
+            setString("ab-loop-a", a.map { String($0) } ?? "no")
+            setString("ab-loop-b", b.map { String($0) } ?? "no")
+            // The displayed time can lag playback; mpv does not loop if B was already passed.
+            if let a, b != nil { command(["seek", String(a), "absolute+exact"]) }
+        }
+    }
+
+    func restoreLoopPoints(a: Double?, b: Double?) {
+        loopA = a; loopB = b
+        worker.async { [self] in
+            setString("ab-loop-a", a.map { String($0) } ?? "no")
+            setString("ab-loop-b", b.map { String($0) } ?? "no")
+        }
+    }
+
+    func screenshot(includeSubtitles: Bool) {
+        guard nativePlayback == nil else { error = L("请返回主播放器后截图。"); return }
         let directory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        let target = directory.appendingPathComponent("IINA-\(Int(Date().timeIntervalSince1970)).png")
-        worker.async { [self] in command(["screenshot-to-file", target.path, "subtitles"]) }
+        let target = directory.appendingPathComponent("IINA-\(UUID().uuidString).png")
+        worker.async { [self] in
+            guard let handle else { publishError(L("播放器尚未准备好截图。")); return }
+            let args: [UnsafeMutablePointer<CChar>?] = ["screenshot-raw", includeSubtitles ? "subtitles" : "video", "rgba64"].map { value in value.withCString { strdup($0) } }
+            defer { args.forEach { free($0) } }
+            var pointers: [UnsafePointer<CChar>?] = args.map { $0.map { UnsafePointer($0) } } + [nil]
+            var result = mpv_node()
+            let code = mpv_command_ret(handle, &pointers, &result)
+            guard code >= 0 else { publishError(LF("截图失败：%@", message(code))); return }
+            defer { mpv_free_node_contents(&result) }
+            guard result.format == MPV_FORMAT_NODE_MAP, let list = result.u.list else { publishError(L("截图数据无效。")); return }
+            var width = 0, height = 0, stride = 0
+            var bytes: Data?
+            for i in 0..<Int(list.pointee.num) {
+                guard let key = list.pointee.keys[i] else { continue }
+                let value = list.pointee.values[i]
+                switch String(cString: key) {
+                case "w": width = Int(value.u.int64)
+                case "h": height = Int(value.u.int64)
+                case "stride": stride = Int(value.u.int64)
+                case "data":
+                    if let ba = value.u.ba, let data = ba.pointee.data { bytes = Data(bytes: data, count: ba.pointee.size) }
+                default: break
+                }
+            }
+            guard width > 0, height > 0, stride >= width * 8, let bytes,
+                  bytes.count >= stride * height, let provider = CGDataProvider(data: bytes as CFData),
+                  let colorSpace = CGColorSpace(name: CGColorSpace.sRGB),
+                  let image = CGImage(width: width, height: height, bitsPerComponent: 16, bitsPerPixel: 64,
+                                      bytesPerRow: stride, space: colorSpace,
+                                      bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.noneSkipLast.rawValue).union(.byteOrder16Little),
+                                      provider: provider, decode: nil, shouldInterpolate: false, intent: .defaultIntent),
+                  let destination = CGImageDestinationCreateWithURL(target as CFURL, UTType.png.identifier as CFString, 1, nil) else {
+                publishError(L("无法生成截图。")); return
+            }
+            CGImageDestinationAddImage(destination, image, nil)
+            guard CGImageDestinationFinalize(destination) else { publishError(L("无法保存截图。")); return }
+            PHPhotoLibrary.requestAuthorization(for: .addOnly) { status in
+                guard status == .authorized || status == .limited else {
+                    self.publishError(L("截图已保存到“文件”，请在系统设置中允许添加到照片。")); return
+                }
+                PHPhotoLibrary.shared().performChanges {
+                    PHAssetCreationRequest.creationRequestForAssetFromImage(atFileURL: target)
+                } completionHandler: { success, error in
+                    if success { self.publishError(L("截图已保存到照片。")) }
+                    else { self.publishError(LF("截图已保存到“文件”，但无法添加到照片：%@", error?.localizedDescription ?? "")) }
+                }
+            }
+        }
     }
 
     private func drainEvents() {
@@ -515,7 +604,7 @@ final class PlayerEngine: NSObject, ObservableObject {
         if let nativePlayback {
             let value = nativePlayback.player.currentTime().seconds
             if value.isFinite { position = value }
-            isPlaying = nativePlayback.player.rate != 0
+            isPlaying = nativePlayback.airPlayMode ? nativePlayback.wantsPlayback : nativePlayback.player.timeControlStatus != .paused
             isBuffering = nativePlayback.preparing || nativePlayback.player.timeControlStatus == .waitingToPlayAtSpecifiedRate
             return
         }

@@ -89,6 +89,8 @@ struct IINASMBFile {
     struct smb2fh *handle;
     int64_t offset;
     int64_t length;
+    uint64_t mtime;
+    uint64_t mtime_nsec;
     uint8_t *read_buffer;
     uint32_t read_capacity;
     int64_t read_start;
@@ -115,7 +117,7 @@ IINASMBFile *iina_smb_open(const char *server, const char *share, const char *pa
     }
     IINASMBFile *file = calloc(1, sizeof(*file));
     if (!file) { remember_error(ENOMEM, 4); smb2_close(ctx, handle); smb2_disconnect_share(ctx); smb2_destroy_context(ctx); return NULL; }
-    file->ctx = ctx; file->handle = handle; file->length = (int64_t)stat.smb2_size;
+    file->ctx = ctx; file->handle = handle; file->length = (int64_t)stat.smb2_size; file->mtime = stat.smb2_mtime; file->mtime_nsec = stat.smb2_mtime_nsec;
     uint32_t maximum = smb2_get_max_read_size(ctx);
     file->read_capacity = maximum && maximum < 1024 * 1024 ? maximum : 1024 * 1024;
     file->read_buffer = malloc(file->read_capacity);
@@ -155,6 +157,8 @@ int64_t iina_smb_seek(IINASMBFile *file, int64_t offset) {
     return offset;
 }
 int64_t iina_smb_size(IINASMBFile *file) { return file ? file->length : -1; }
+uint64_t iina_smb_mtime(IINASMBFile *file) { return file ? file->mtime : 0; }
+uint64_t iina_smb_mtime_nsec(IINASMBFile *file) { return file ? file->mtime_nsec : 0; }
 uint64_t iina_smb_network_reads(IINASMBFile *file) { return file ? file->network_reads : 0; }
 void iina_smb_cancel(IINASMBFile *file) { if (file) atomic_store(&file->cancelled, 1); }
 void iina_smb_close(IINASMBFile *file) {
