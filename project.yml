@@ -37,8 +37,8 @@ targets:
         PRODUCT_NAME: IINAMobile
         SWIFT_OBJC_BRIDGING_HEADER: App/IINAMobile-Bridging-Header.h
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
-        MARKETING_VERSION: "0.6.0"
-        CURRENT_PROJECT_VERSION: "12"
+        MARKETING_VERSION: "0.6.1"
+        CURRENT_PROJECT_VERSION: "15"
         TARGETED_DEVICE_FAMILY: "1,2"
     info:
       path: App/Info.plist
@@ -62,9 +62,45 @@ targets:
         UIFileSharingEnabled: true
         LSSupportsOpeningDocumentsInPlace: true
         CFBundleDocumentTypes:
-          - CFBundleTypeName: Video and subtitles
+          - CFBundleTypeName: Video
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Default
+            LSItemContentTypes: [public.movie, public.video, org.matroska.mkv, org.webmproject.webm, com.microsoft.windows-media-wmv, com.adobe.flash.video, com.real.realmedia]
+          - CFBundleTypeName: Subtitles and other media
+            CFBundleTypeRole: Viewer
             LSHandlerRank: Alternate
-            LSItemContentTypes: [public.movie, public.video, public.subtitle, public.data]
+            LSItemContentTypes: [public.subtitle, public.data]
+        UTImportedTypeDeclarations:
+          - UTTypeIdentifier: org.matroska.mkv
+            UTTypeDescription: Matroska video
+            UTTypeConformsTo: [public.movie]
+            UTTypeTagSpecification:
+              public.filename-extension: [mkv]
+              public.mime-type: video/x-matroska
+          - UTTypeIdentifier: org.webmproject.webm
+            UTTypeDescription: WebM video
+            UTTypeConformsTo: [public.movie]
+            UTTypeTagSpecification:
+              public.filename-extension: [webm]
+              public.mime-type: video/webm
+          - UTTypeIdentifier: com.microsoft.windows-media-wmv
+            UTTypeDescription: Windows Media video
+            UTTypeConformsTo: [public.movie]
+            UTTypeTagSpecification:
+              public.filename-extension: [wmv]
+              public.mime-type: video/x-ms-wmv
+          - UTTypeIdentifier: com.adobe.flash.video
+            UTTypeDescription: Flash video
+            UTTypeConformsTo: [public.movie]
+            UTTypeTagSpecification:
+              public.filename-extension: [flv]
+              public.mime-type: video/x-flv
+          - UTTypeIdentifier: com.real.realmedia
+            UTTypeDescription: RealMedia video
+            UTTypeConformsTo: [public.movie]
+            UTTypeTagSpecification:
+              public.filename-extension: [rm, rmvb]
+              public.mime-type: application/vnd.rn-realmedia
   IINAMobileTests:
     type: bundle.unit-test
     platform: iOS

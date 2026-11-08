@@ -264,6 +264,7 @@ struct PlayerScreen: View {
         VStack(spacing: 10) {
             HStack(spacing: 12) {
                 Text(time(seeking ? seekPosition : player.position)).monospacedDigit()
+                    .accessibilityIdentifier("playbackPosition")
                 Slider(value: Binding(get: { seeking ? seekPosition : min(player.position, max(player.duration, 1)) }, set: { seeking = true; seekPosition = $0 }),
                        in: 0...max(player.duration, 1), onEditingChanged: { editing in
                     if editing { if !seeking { seekPosition = player.position; seeking = true } }
