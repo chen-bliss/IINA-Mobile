@@ -4,11 +4,13 @@
 
 [下载最新 Release](https://github.com/chen-bliss/IINA-Mobile/releases/latest)
 
-## 0.6.0 后续修复（尚未完成真机验收）
+## 0.6.1 更新
 
-- 全屏播放退到后台或锁屏前暂停并释放 mpv 视频输出，回到前台后重建输出；保留进度与手动暂停状态。暂停后允许系统自动熄屏。此次针对 Metal 后台使用和失效输出资源的风险修正，尚无用户设备的崩溃日志证明原始闪退原因，仍需锁屏、解锁真机复测。
+- 全屏播放退到后台或锁屏前暂停并释放 mpv 视频输出，回到前台后重建输出；保留进度与手动暂停状态。暂停后允许系统自动熄屏。用户已在同一 SMB 视频上验证：全屏手动暂停、锁屏、解锁后继续播放，目前不再闪退。此结果代表本次设备和片源，仍欢迎反馈其他场景。
 - 设置页增加“设为默认视频播放器”和“取消设为默认视频播放器”的系统操作指引；补充视频 Viewer 声明及 MKV、WebM、WMV、FLV、RealMedia 文件类型。
 - iOS 26 及以上需在“文件”中长按视频 → 显示简介 → 始终使用此应用打开，选择 IINA Mobile 或改选其他应用，并按系统提示应用到该文件或同类文件。不同格式分别设置。SMB 共享可能没有该入口；请先在“我的 iPhone”或 iCloud 云盘中对同格式视频操作，再回到 SMB 验证系统是否沿用。设置指引可准备本地 MP4/MKV 短片；若系统不沿用关联，可直接在应用首页添加 SMB 服务器播放。应用不能直接修改或读取系统关联，设置页不会显示未经系统确认的“已设为默认”。较早系统可用“共享 → IINA Mobile”打开视频。
+
+真机已确认：在本地同格式视频设置默认应用后，系统“文件”中的 SMB 视频也会由所选应用打开。
 
 系统文件操作参见 [Apple《在 iPhone 上查找和查看文件与文件夹》](https://support.apple.com/en-ie/guide/iphone/iphe4bff8827/27/ios/27)。
 
@@ -86,9 +88,9 @@ DLNA 接收端直接读取网络视频链接时可独立播放；手机本地文
 
 ## 构建
 
-0.5.0 沿用 0.4.0 的第三方依赖和源码归档，下载链接见 [Dependencies/README.md](Dependencies/README.md)。
+0.6.1 沿用 0.4.0 的第三方依赖和源码归档，下载链接见 [Dependencies/README.md](Dependencies/README.md)。
 
-要求 macOS、Xcode 和 iOS SDK。应用最低支持 iOS 17，当前针对用户的 iPhone Duo、iOS 27.1 构建。项目已包含生成的 `IINAMobile.xcodeproj`。
+要求 macOS、Xcode 和 iOS SDK。应用最低支持 iOS 17，本次 0.6.1 使用 Xcode 27.2 构建；锁屏恢复与默认文件关联已在用户的 iOS 27.2 真机上验证。项目已包含生成的 `IINAMobile.xcodeproj`。
 
 ```sh
 python3 Scripts/bootstrap.py
@@ -133,18 +135,19 @@ python3 -m venv .qa-venv
 
 - 本次生成的开发版需要对应设备和有效签名。IPA 不是任意 iPhone 都能直接安装的 App Store 安装包。
 - 免费 Apple Personal Team 每台设备最多安装 3 个自行签名应用，签名配置通常 7 天到期。该限制来自苹果，与播放器是否收费无关。
-- 更新使用原有应用标识，不卸载其他应用，也不消耗新的免费安装名额。硬件 HDR 亮度和实际 NAS 兼容性需要在手机上验证。
+- 覆盖更新需要匹配原应用标识及有效签名；更改标识会安装为独立应用，数据和默认打开关联也会分别管理。硬件 HDR 亮度和实际 NAS 兼容性需要在手机上验证。
 - HDR 输出依赖 MPVKit 的 MoltenVK 后端和屏幕能力。Dolby Vision 各类配置、外接屏和 AirPlay 不在此版本的验收范围内。画中画限制见上方 0.5.0 说明。
 - 此版本聚焦色彩、HDR、字幕、SMB，尚未移植 IINA 的整个桌面界面、插件系统与所有设置。
 
-开源来源、版本与许可证见 [THIRD_PARTY.md](THIRD_PARTY.md)。测试结果与安装状态见随附的交付说明。
+开源来源、版本与许可证见 [THIRD_PARTY.md](THIRD_PARTY.md)。测试结果与安装状态见 [VALIDATION.md](VALIDATION.md)。
 
 ## Release 安装包
 
-公开 Release 提供 `IINA-Mobile-0.4.0-unsigned.ipa`，需使用自己的 Apple 开发账号重新签名后安装，也可以直接从源码用 Xcode 构建。公开包不包含任何个人设备的描述文件或开发签名，不是 App Store 安装包。
+[0.6.1 Release](https://github.com/chen-bliss/IINA-Mobile/releases/tag/v0.6.1) 提供 `IINA-Mobile-0.6.1-unsigned.ipa`，需使用自己的 Apple 开发账号重新签名后安装，也可以直接从源码用 Xcode 构建。公开包不包含任何个人设备的描述文件或开发签名，不是 App Store 安装包。
 
-- `Dependencies.zip`：构建所需的已校验 iOS / 模拟器二进制依赖，解压到仓库根目录。
-- `ThirdPartySources.tar`：第三方播放器组件的固定版本源码归档、构建脚本和来源清单。
+- `IINA-Mobile-0.6.1-source.zip`：本版本完整应用源码。
+- [Dependencies.zip](https://github.com/chen-bliss/IINA-Mobile/releases/download/v0.4.0/IINA-Mobile-0.4.0-Dependencies.zip)：沿用的 iOS / 模拟器二进制依赖，解压到仓库根目录。
+- [ThirdPartySources.tar](https://github.com/chen-bliss/IINA-Mobile/releases/download/v0.4.0/IINA-Mobile-0.4.0-ThirdPartySources.tar)：沿用的第三方播放器组件源码、构建脚本和来源清单。
 - `SHA256SUMS.txt`：Release 附件校验值。
 
 源码遵循 GPL-3.0-or-later，第三方组件保留各自许可证，详见 [THIRD_PARTY.md](THIRD_PARTY.md)。
