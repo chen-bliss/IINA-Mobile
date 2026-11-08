@@ -198,3 +198,14 @@
 "在“始终使用此应用打开”中选择 IINA Mobile，并按系统提示应用到该文件或同类文件。" = "Under Always Open With, choose IINA Mobile and follow the system prompt to apply it to this file or file type.";
 "MP4、MKV 等不同格式需要分别设置。系统可能显示不同的菜单名称。" = "Set each format, such as MP4 and MKV, separately. Menu names may vary by system version.";
 "较早的 iOS 版本可在“文件”中长按视频，选择“共享”，再选择 IINA Mobile；这些版本不支持上述默认打开设置。" = "On earlier iOS versions, touch and hold a video in Files, choose Share, then IINA Mobile. These versions do not support the default opening setting above.";
+
+// SMB default-opening guidance
+"SMB 共享可能没有设置入口，请先在“我的 iPhone”或 iCloud 云盘中操作。" = "SMB shares may not offer this setting. Start in On My iPhone or iCloud Drive.";
+"SMB 共享没有打开方式？" = "No Open With option on SMB?";
+"系统“文件”的 SMB 共享位置可能不显示“打开方式”或“始终使用此应用打开”。请先在“我的 iPhone”或 iCloud 云盘中找到同格式的视频，再设置或取消默认应用。" = "SMB locations in Files may omit Open With or Always Open With. Find a video of the same format in On My iPhone or iCloud Drive to set or remove the default app.";
+"可使用下方按钮准备本地 MP4、MKV 短片，然后到“文件”→“我的 iPhone”→本应用文件夹→“默认播放器示例”操作。测试版请进入“IINA Mobile 测试版”文件夹。" = "Use the button below to prepare short local MP4 and MKV videos. In Files, go to On My iPhone, this app’s folder, then 默认播放器示例. For the test edition, use the IINA Mobile 测试版 folder.";
+"准备本地 MP4、MKV 示例" = "Prepare local MP4 and MKV samples";
+"设置后请返回 SMB 测试是否生效。若系统仍不使用所选应用，可在 IINA Mobile 首页添加同一个 SMB 服务器，直接浏览和播放；无需先下载整段视频。" = "Return to SMB and check whether the setting applies. If the system still ignores your choice, add the same SMB server on the IINA Mobile home page to browse and stream without downloading the entire video first.";
+"本地示例" = "Local samples";
+"已准备好。请到“文件”→“我的 iPhone”→本应用文件夹→“默认播放器示例”，长按示例视频并选择“显示简介”。" = "Ready. In Files, go to On My iPhone, this app’s folder, then 默认播放器示例. Touch and hold a sample video and choose Get Info.";
+"无法准备本地示例：%@" = "Could not prepare local samples: %@";

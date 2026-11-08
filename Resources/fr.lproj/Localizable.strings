@@ -198,3 +198,14 @@
 "在“始终使用此应用打开”中选择 IINA Mobile，并按系统提示应用到该文件或同类文件。" = "Dans Toujours ouvrir avec, choisissez IINA Mobile et suivez les instructions pour ce fichier ou ce type de fichier.";
 "MP4、MKV 等不同格式需要分别设置。系统可能显示不同的菜单名称。" = "Configurez chaque format, comme MP4 et MKV, séparément. Les noms des menus peuvent varier.";
 "较早的 iOS 版本可在“文件”中长按视频，选择“共享”，再选择 IINA Mobile；这些版本不支持上述默认打开设置。" = "Sur les versions antérieures d’iOS, maintenez le doigt sur une vidéo dans Fichiers, choisissez Partager, puis IINA Mobile. Ces versions ne proposent pas le réglage par défaut décrit ci-dessus.";
+
+// SMB default-opening guidance
+"SMB 共享可能没有设置入口，请先在“我的 iPhone”或 iCloud 云盘中操作。" = "Les partages SMB peuvent ne pas proposer ce réglage. Commencez dans Sur mon iPhone ou iCloud Drive.";
+"SMB 共享没有打开方式？" = "Pas d’option Ouvrir avec sur SMB ?";
+"系统“文件”的 SMB 共享位置可能不显示“打开方式”或“始终使用此应用打开”。请先在“我的 iPhone”或 iCloud 云盘中找到同格式的视频，再设置或取消默认应用。" = "Dans Fichiers, les emplacements SMB peuvent ne pas proposer Ouvrir avec ou Toujours ouvrir avec. Trouvez une vidéo du même format dans Sur mon iPhone ou iCloud Drive pour définir ou retirer l’app par défaut.";
+"可使用下方按钮准备本地 MP4、MKV 短片，然后到“文件”→“我的 iPhone”→本应用文件夹→“默认播放器示例”操作。测试版请进入“IINA Mobile 测试版”文件夹。" = "Le bouton ci-dessous prépare de courtes vidéos MP4 et MKV locales. Dans Fichiers, ouvrez Sur mon iPhone, le dossier de cette app, puis 默认播放器示例. Pour la version de test, utilisez le dossier IINA Mobile 测试版.";
+"准备本地 MP4、MKV 示例" = "Préparer des exemples MP4 et MKV";
+"设置后请返回 SMB 测试是否生效。若系统仍不使用所选应用，可在 IINA Mobile 首页添加同一个 SMB 服务器，直接浏览和播放；无需先下载整段视频。" = "Retournez sur SMB et vérifiez le résultat. Si le système ignore encore votre choix, ajoutez le même serveur SMB sur l’accueil d’IINA Mobile pour parcourir et lire les vidéos sans les télécharger entièrement.";
+"本地示例" = "Exemples locaux";
+"已准备好。请到“文件”→“我的 iPhone”→本应用文件夹→“默认播放器示例”，长按示例视频并选择“显示简介”。" = "Les exemples sont prêts. Dans Fichiers, ouvrez Sur mon iPhone, le dossier de cette app, puis 默认播放器示例. Maintenez le doigt sur une vidéo et choisissez Informations.";
+"无法准备本地示例：%@" = "Impossible de préparer les exemples locaux : %@";

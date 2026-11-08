@@ -9,6 +9,7 @@ struct SettingsScreen: View {
     @State private var clearingHistory = false
     @State private var showingDefaultPlayerGuide = false
     @State private var removingDefaultPlayer = false
+    @State private var sampleMessage: String?
 
     var body: some View {
         let _ = language.selection
@@ -33,6 +34,8 @@ struct SettingsScreen: View {
                         showingDefaultPlayerGuide = true
                     }.accessibilityIdentifier("removeDefaultVideoPlayer")
                     Text(L("默认打开方式由系统“文件”应用管理，需要在那里确认；本应用无法读取或直接更改。"))
+                        .font(.caption).foregroundStyle(.secondary)
+                    Text(L("SMB 共享可能没有设置入口，请先在“我的 iPhone”或 iCloud 云盘中操作。"))
                         .font(.caption).foregroundStyle(.secondary)
                 } header: { Text(L("默认视频播放器")) }
                 Section(L("语言")) {
@@ -108,6 +111,13 @@ struct SettingsScreen: View {
             .sheet(isPresented: $showingDefaultPlayerGuide) {
                 NavigationStack {
                     List {
+                        Section(L("SMB 共享没有打开方式？")) {
+                            Text(L("系统“文件”的 SMB 共享位置可能不显示“打开方式”或“始终使用此应用打开”。请先在“我的 iPhone”或 iCloud 云盘中找到同格式的视频，再设置或取消默认应用。"))
+                            Text(L("可使用下方按钮准备本地 MP4、MKV 短片，然后到“文件”→“我的 iPhone”→本应用文件夹→“默认播放器示例”操作。测试版请进入“IINA Mobile 测试版”文件夹。"))
+                            Button(L("准备本地 MP4、MKV 示例"), action: prepareDefaultPlayerSamples)
+                                .accessibilityIdentifier("prepareDefaultPlayerSamples")
+                            Text(L("设置后请返回 SMB 测试是否生效。若系统仍不使用所选应用，可在 IINA Mobile 首页添加同一个 SMB 服务器，直接浏览和播放；无需先下载整段视频。"))
+                        }
                         Section {
                             Text(L("在 iOS 26 及以上版本中，打开系统“文件”应用，长按一个视频，选择“显示简介”。"))
                             Text(L(removingDefaultPlayer
@@ -125,9 +135,26 @@ struct SettingsScreen: View {
                         Button(L("完成")) { showingDefaultPlayerGuide = false }
                             .accessibilityIdentifier("dismissDefaultPlayerGuide")
                     } }
+                    .alert(L("本地示例"), isPresented: Binding(get: { sampleMessage != nil }, set: { if !$0 { sampleMessage = nil } })) {
+                        Button(L("好"), role: .cancel) {}
+                    } message: { Text(sampleMessage ?? "") }
                 }.preferredColorScheme(.dark)
             }
         }.preferredColorScheme(.dark)
+    }
+
+    private func prepareDefaultPlayerSamples() {
+        do {
+            let documents = try FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+            let folder = documents.appendingPathComponent("默认播放器示例", isDirectory: true)
+            try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+            for (name, ext) in [("QA-PiP", "mp4"), ("Sample-SDR", "mkv")] {
+                guard let source = Bundle.main.url(forResource: name, withExtension: ext) else { throw CocoaError(.fileNoSuchFile) }
+                let target = folder.appendingPathComponent("IINA-Sample.\(ext)")
+                if !FileManager.default.fileExists(atPath: target.path) { try FileManager.default.copyItem(at: source, to: target) }
+            }
+            sampleMessage = L("已准备好。请到“文件”→“我的 iPhone”→本应用文件夹→“默认播放器示例”，长按示例视频并选择“显示简介”。")
+        } catch { sampleMessage = LF("无法准备本地示例：%@", error.localizedDescription) }
     }
 }
 

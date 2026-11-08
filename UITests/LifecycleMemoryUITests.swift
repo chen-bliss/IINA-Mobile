@@ -10,10 +10,17 @@ final class LifecycleMemoryUITests: XCTestCase {
             let button = app.buttons[id]
             XCTAssertTrue(button.waitForExistence(timeout: 5))
             button.tap()
-            XCTAssertTrue(app.staticTexts["在 iOS 26 及以上版本中，打开系统“文件”应用，长按一个视频，选择“显示简介”。"].waitForExistence(timeout: 5))
+            let samples = app.buttons["prepareDefaultPlayerSamples"]
+            for _ in 0..<4 where !samples.isHittable { app.swipeUp() }
+            XCTAssertTrue(samples.isHittable)
+            samples.tap()
+            XCTAssertTrue(app.alerts["本地示例"].waitForExistence(timeout: 5))
+            XCTAssertTrue(app.staticTexts["已准备好。请到“文件”→“我的 iPhone”→本应用文件夹→“默认播放器示例”，长按示例视频并选择“显示简介”。"].exists)
+            app.alerts["本地示例"].buttons["好"].tap()
             let instruction = id == "setDefaultVideoPlayer"
                 ? "在“始终使用此应用打开”中选择 IINA Mobile，并按系统提示应用到该文件或同类文件。"
                 : "在“始终使用此应用打开”中改选其他应用，并按系统提示应用到该文件或同类文件。"
+            for _ in 0..<4 where !app.staticTexts[instruction].exists { app.swipeUp() }
             XCTAssertTrue(app.staticTexts[instruction].exists)
             app.buttons["dismissDefaultPlayerGuide"].tap()
         }
