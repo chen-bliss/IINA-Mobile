@@ -1,7 +1,57 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import XCTest
+import UIKit
 
 final class LifecycleMemoryUITests: XCTestCase {
+    func testDefaultVideoPlayerGuidesDoNotClaimToChangeSystemSettings() {
+        let app = launch()
+        app.buttons["openSettings"].tap()
+        for id in ["setDefaultVideoPlayer", "removeDefaultVideoPlayer"] {
+            let button = app.buttons[id]
+            XCTAssertTrue(button.waitForExistence(timeout: 5))
+            button.tap()
+            XCTAssertTrue(app.staticTexts["在 iOS 26 及以上版本中，打开系统“文件”应用，长按一个视频，选择“显示简介”。"].waitForExistence(timeout: 5))
+            let instruction = id == "setDefaultVideoPlayer"
+                ? "在“始终使用此应用打开”中选择 IINA Mobile，并按系统提示应用到该文件或同类文件。"
+                : "在“始终使用此应用打开”中改选其他应用，并按系统提示应用到该文件或同类文件。"
+            XCTAssertTrue(app.staticTexts[instruction].exists)
+            app.buttons["dismissDefaultPlayerGuide"].tap()
+        }
+    }
+
+    func testPausedFullScreenSDRSurvivesBackgroundAndResize() { checkPausedBackgroundReturn(sample: "sampleSDR") }
+    func testPausedFullScreenHDRSurvivesBackgroundAndResize() { checkPausedBackgroundReturn(sample: "sampleHDR") }
+
+    private func checkPausedBackgroundReturn(sample: String) {
+        defer { XCUIDevice.shared.orientation = .portrait }
+        let app = launch()
+        app.buttons[sample].tap()
+        let playback = app.buttons["togglePlayback"]
+        let playing = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == '暂停'"), object: playback)
+        XCTAssertEqual(XCTWaiter.wait(for: [playing], timeout: 25), .completed)
+        playback.tap()
+        let paused = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == '播放'"), object: playback)
+        XCTAssertEqual(XCTWaiter.wait(for: [paused], timeout: 5), .completed)
+        XCTAssertFalse(app.segmentedControls["settingsTabs"].exists)
+        let position = app.staticTexts["playbackPosition"]
+        let before = position.label
+        for orientation in [UIDeviceOrientation.landscapeLeft, .portrait, .landscapeRight] {
+            XCUIDevice.shared.press(.home)
+            XCUIDevice.shared.orientation = orientation
+            let elapsed = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in false }, object: nil)
+            _ = XCTWaiter.wait(for: [elapsed], timeout: 2)
+            app.activate()
+            XCTAssertTrue(playback.waitForExistence(timeout: 10), "Player must survive backgrounding without restarting on the home page.")
+            XCTAssertEqual(playback.label, "播放", "A user pause must survive foreground restoration.")
+            XCTAssertEqual(position.label, before)
+            XCTAssertFalse(app.alerts["播放提示"].exists)
+        }
+        playback.tap()
+        let advanced = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in position.label != before }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [advanced], timeout: 8), .completed, "Playback must advance after resuming.")
+        XCTAssertEqual(playback.label, "暂停")
+    }
+
     private func launch(_ extra: [String] = [], language: String = "zh-Hans") -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = ["--uitesting", "-AppleLanguages", "(\(language))"] + extra

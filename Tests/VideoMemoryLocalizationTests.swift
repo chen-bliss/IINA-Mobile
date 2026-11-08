@@ -105,6 +105,25 @@ final class VideoMemoryLocalizationTests: XCTestCase {
         XCTAssertFalse(PictureInPictureSession.supports(URL(fileURLWithPath: "/movie.mkv")))
         XCTAssertFalse(PictureInPictureSession.supports(try XCTUnwrap(URL(string: "rtsp://video.test/movie.mp4"))))
     }
+    func testSystemFileOpeningDeclaresVideoViewerAndImportedFormats() throws {
+        let documents = try XCTUnwrap(Bundle.main.object(forInfoDictionaryKey: "CFBundleDocumentTypes") as? [[String: Any]])
+        let video = try XCTUnwrap(documents.first { $0["CFBundleTypeName"] as? String == "Video" })
+        XCTAssertEqual(video["CFBundleTypeRole"] as? String, "Viewer")
+        XCTAssertEqual(video["LSHandlerRank"] as? String, "Default")
+        let supported = try XCTUnwrap(video["LSItemContentTypes"] as? [String])
+        XCTAssertTrue(supported.contains("public.movie"))
+        XCTAssertTrue(supported.contains("public.video"))
+        let imports = try XCTUnwrap(Bundle.main.object(forInfoDictionaryKey: "UTImportedTypeDeclarations") as? [[String: Any]])
+        var extensions = Set<String>()
+        for declaration in imports {
+            let identifier = try XCTUnwrap(declaration["UTTypeIdentifier"] as? String)
+            XCTAssertTrue(supported.contains(identifier))
+            XCTAssertTrue((declaration["UTTypeConformsTo"] as? [String] ?? []).contains("public.movie"))
+            let tags = try XCTUnwrap(declaration["UTTypeTagSpecification"] as? [String: Any])
+            extensions.formUnion(try XCTUnwrap(tags["public.filename-extension"] as? [String]))
+        }
+        XCTAssertTrue(Set(["mkv", "webm", "wmv", "flv", "rmvb"]).isSubset(of: extensions))
+    }
     func testAVFoundationReadsSMBByteRangesForNativePlayback() async throws {
         guard ProcessInfo.processInfo.environment["IINA_SMB_QA"] == "1" else { throw XCTSkip("Requires isolated SMB fixture") }
         let source = try XCTUnwrap(URL(string: "smb://iinaqa:fixture-only@127.0.0.1:1445/QA/QA-PiP.mp4"))

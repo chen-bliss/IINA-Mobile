@@ -187,3 +187,14 @@
 "应用语言" = "Langue de l’application";
 "跟随系统" = "Suivre le système";
 "立即生效并记住选择。跟随系统时，未支持的语言将使用英文。" = "Le changement est immédiat et mémorisé. Le mode système utilise l’anglais si la langue n’est pas prise en charge.";
+
+// Default video player guidance
+"默认视频播放器" = "Lecteur vidéo par défaut";
+"设为默认视频播放器" = "Définir comme lecteur vidéo par défaut";
+"取消设为默认视频播放器" = "Retirer comme lecteur vidéo par défaut";
+"默认打开方式由系统“文件”应用管理，需要在那里确认；本应用无法读取或直接更改。" = "L’ouverture par défaut se règle dans l’app Fichiers et doit y être confirmée. Cette app ne peut ni lire ni modifier directement ce réglage.";
+"在 iOS 26 及以上版本中，打开系统“文件”应用，长按一个视频，选择“显示简介”。" = "Sous iOS 26 ou version ultérieure, ouvrez Fichiers, maintenez le doigt sur une vidéo, puis choisissez Informations.";
+"在“始终使用此应用打开”中改选其他应用，并按系统提示应用到该文件或同类文件。" = "Dans Toujours ouvrir avec, choisissez une autre app et suivez les instructions pour ce fichier ou ce type de fichier.";
+"在“始终使用此应用打开”中选择 IINA Mobile，并按系统提示应用到该文件或同类文件。" = "Dans Toujours ouvrir avec, choisissez IINA Mobile et suivez les instructions pour ce fichier ou ce type de fichier.";
+"MP4、MKV 等不同格式需要分别设置。系统可能显示不同的菜单名称。" = "Configurez chaque format, comme MP4 et MKV, séparément. Les noms des menus peuvent varier.";
+"较早的 iOS 版本可在“文件”中长按视频，选择“共享”，再选择 IINA Mobile；这些版本不支持上述默认打开设置。" = "Sur les versions antérieures d’iOS, maintenez le doigt sur une vidéo dans Fichiers, choisissez Partager, puis IINA Mobile. Ces versions ne proposent pas le réglage par défaut décrit ci-dessus.";

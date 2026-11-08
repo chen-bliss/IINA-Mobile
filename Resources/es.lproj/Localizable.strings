@@ -187,3 +187,14 @@
 "应用语言" = "Idioma de la aplicación";
 "跟随系统" = "Seguir el sistema";
 "立即生效并记住选择。跟随系统时，未支持的语言将使用英文。" = "El cambio es inmediato y se guarda. El modo del sistema usa inglés para idiomas no compatibles.";
+
+// Default video player guidance
+"默认视频播放器" = "Reproductor de vídeo predeterminado";
+"设为默认视频播放器" = "Establecer como reproductor predeterminado";
+"取消设为默认视频播放器" = "Quitar como reproductor predeterminado";
+"默认打开方式由系统“文件”应用管理，需要在那里确认；本应用无法读取或直接更改。" = "La apertura predeterminada se gestiona y confirma en la app Archivos. Esta app no puede consultar ni cambiar ese ajuste directamente.";
+"在 iOS 26 及以上版本中，打开系统“文件”应用，长按一个视频，选择“显示简介”。" = "En iOS 26 o posterior, abre Archivos, mantén pulsado un vídeo y elige Obtener información.";
+"在“始终使用此应用打开”中改选其他应用，并按系统提示应用到该文件或同类文件。" = "En Abrir siempre con, elige otra app y sigue las indicaciones para este archivo o tipo de archivo.";
+"在“始终使用此应用打开”中选择 IINA Mobile，并按系统提示应用到该文件或同类文件。" = "En Abrir siempre con, elige IINA Mobile y sigue las indicaciones para este archivo o tipo de archivo.";
+"MP4、MKV 等不同格式需要分别设置。系统可能显示不同的菜单名称。" = "Configura cada formato, como MP4 y MKV, por separado. Los nombres de los menús pueden variar.";
+"较早的 iOS 版本可在“文件”中长按视频，选择“共享”，再选择 IINA Mobile；这些版本不支持上述默认打开设置。" = "En versiones anteriores de iOS, mantén pulsado un vídeo en Archivos, elige Compartir y luego IINA Mobile. Estas versiones no admiten el ajuste predeterminado anterior.";

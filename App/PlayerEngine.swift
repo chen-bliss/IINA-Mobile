@@ -20,7 +20,9 @@ final class VideoLayer: CAMetalLayer {
         set {
             // MoltenVK changes this on its rendering thread. UIKit needs the main thread.
             if Thread.isMainThread { super.wantsExtendedDynamicRangeContent = newValue }
-            else { DispatchQueue.main.sync { self.wantsExtendedDynamicRangeContent = newValue } }
+            // Never wait for main from the render thread: background entry waits
+            // for mpv to release its video output, including this render thread.
+            else { DispatchQueue.main.async { self.wantsExtendedDynamicRangeContent = newValue } }
         }
     }
 }
@@ -28,7 +30,11 @@ final class VideoLayer: CAMetalLayer {
 final class PlayerEngine: NSObject, ObservableObject {
     @Published var picture = AppPreferences.load().picture
     @Published var title = L("尚未播放")
-    @Published var isPlaying = false
+    @Published var isPlaying = false {
+        didSet {
+            UIApplication.shared.isIdleTimerDisabled = isPlaying && UIApplication.shared.applicationState == .active
+        }
+    }
     @Published var isLoaded = false
     @Published var isBuffering = false
     @Published var position: Double = 0
@@ -92,8 +98,10 @@ final class PlayerEngine: NSObject, ObservableObject {
     private var activeSubtitleSize: Double = 40
     private var timer: Timer?
     private var nativePlayback: PictureInPictureSession?
-    private var needsNativeRestore = false
     private var nativeOutputSuspended = false
+    // Accessed only on worker, alongside all mpv operations.
+    private var applicationActive = true
+    private var resumeAfterInactivity = false
     private var lifecycleTokens: [NSObjectProtocol] = []
     #if DEBUG
     private let playbackDiagnostics = PlaybackDiagnostics()
@@ -102,9 +110,23 @@ final class PlayerEngine: NSObject, ObservableObject {
 
     override init() {
         super.init()
+        applicationActive = UIApplication.shared.applicationState == .active
         let center = NotificationCenter.default
+        lifecycleTokens.append(center.addObserver(forName: UIApplication.willResignActiveNotification, object: nil, queue: .main) { [weak self] _ in
+            self?.worker.async { [weak self] in self?.suspendVideoOutput() }
+        })
         lifecycleTokens.append(center.addObserver(forName: UIApplication.didEnterBackgroundNotification, object: nil, queue: .main) { [weak self] _ in
-            if self?.nativePlayback == nil { self?.setPaused(true) }
+            guard let self else { return }
+            // Complete VO teardown before UIKit can suspend the app. Pausing
+            // alone still allows mpv to redraw a paused frame on a stale swapchain.
+            self.worker.sync {
+                self.suspendVideoOutput()
+                self.resumeAfterInactivity = false
+            }
+            UIApplication.shared.isIdleTimerDisabled = false
+        })
+        lifecycleTokens.append(center.addObserver(forName: UIApplication.didBecomeActiveNotification, object: nil, queue: .main) { [weak self] _ in
+            self?.refreshAfterForeground()
         })
         lifecycleTokens.append(center.addObserver(forName: AVAudioSession.interruptionNotification, object: nil, queue: .main) { [weak self] notification in
             guard let self, self.nativePlayback == nil,
@@ -155,7 +177,7 @@ final class PlayerEngine: NSObject, ObservableObject {
         var wid = Int64(Int(bitPattern: Unmanaged.passUnretained(renderLayer).toOpaque()))
         check(mpv_set_option(mpv, "wid", MPV_FORMAT_INT64, &wid), L("视频输出"))
         var options = [
-            "vo": "gpu-next", "gpu-api": "vulkan", "gpu-context": "moltenvk",
+            "vo": applicationActive && !nativeOutputSuspended ? "gpu-next" : "null", "gpu-api": "vulkan", "gpu-context": "moltenvk",
             "hwdec": "videotoolbox", "keep-open": "yes", "idle": "yes",
             "input-default-bindings": "no", "input-vo-keyboard": "no",
             "terminal": "no", "msg-level": "all=no", "config": "no",
@@ -244,20 +266,19 @@ final class PlayerEngine: NSObject, ObservableObject {
 
     private func loadOnWorker(_ url: URL) {
         currentURL = url
-        setString("pause", "no")
+        setString("pause", applicationActive && !nativeOutputSuspended ? "no" : "yes")
         command(["loadfile", smbStreams.mediaPath(url), "replace"])
     }
 
     func close() {
         nativePlayback?.stop()
-        needsNativeRestore = false
         timer?.invalidate(); timer = nil
         UIApplication.shared.isIdleTimerDisabled = false
         isPlaying = false; isLoaded = false; isBuffering = false
         let scopes = scopedURLs; scopedURLs = []
         worker.async { [self] in
             destroyHandle()
-            nativeOutputSuspended = false; previewRegion = nil
+            nativeOutputSuspended = false; resumeAfterInactivity = false; previewRegion = nil
             smbStreams.reset()
             renderLayer = nil; currentURL = nil; pendingURL = nil; openedExternalSubtitles = []
             DispatchQueue.main.async { scopes.forEach { $0.stopAccessingSecurityScopedResource() } }
@@ -328,22 +349,39 @@ final class PlayerEngine: NSObject, ObservableObject {
     func endNativePlayback(position: Double, resume: Bool) {
         nativePlayback = nil
         self.position = position
-        let foreground = UIApplication.shared.applicationState == .active
-        needsNativeRestore = !foreground
         worker.async { [self] in
-            if foreground { nativeOutputSuspended = false; setString("vo", "gpu-next"); applyDisplaySettings() }
+            nativeOutputSuspended = false
+            if applicationActive { setString("vo", "gpu-next"); applyDisplaySettings() }
             command(["seek", String(max(0, position)), "absolute+exact"])
-            setString("pause", resume && foreground ? "no" : "yes")
+            setString("pause", resume && applicationActive ? "no" : "yes")
         }
     }
+    private func suspendVideoOutput() {
+        guard applicationActive else { return }
+        applicationActive = false
+        resizeWork?.cancel()
+        resumeAfterInactivity = handle != nil && !nativeOutputSuspended && !flag("pause")
+        setString("pause", "yes")
+        setString("vo", "null")
+    }
     func refreshAfterForeground() {
-        if needsNativeRestore {
-            needsNativeRestore = false
-            worker.async { [self] in nativeOutputSuspended = false; setString("vo", "gpu-next"); applyDisplaySettings() }
+        guard UIApplication.shared.applicationState == .active else { return }
+        if timer != nil {
+            setControlsVisible(true)
+            refreshThermalProtection()
         }
-        setControlsVisible(true)
-        refreshThermalProtection()
-        worker.async { [self] in refreshViewportIfNeeded() }
+        worker.async { [self] in
+            if !applicationActive {
+                applicationActive = true
+                if !nativeOutputSuspended {
+                    setString("vo", "gpu-next")
+                    applyDisplaySettings()
+                    setString("pause", resumeAfterInactivity ? "no" : "yes")
+                }
+                resumeAfterInactivity = false
+            }
+            refreshViewportIfNeeded()
+        }
     }
 
     func viewportDidResize(_ size: CGSize) {
@@ -359,7 +397,7 @@ final class PlayerEngine: NSObject, ObservableObject {
     }
 
     private func refreshViewportIfNeeded() {
-        guard !nativeOutputSuspended, handle != nil, currentURL != nil, double("video-params/w") > 0 else { return }
+        guard applicationActive, !nativeOutputSuspended, handle != nil, currentURL != nil, double("video-params/w") > 0 else { return }
         let width = double("osd-dimensions/w"), height = double("osd-dimensions/h")
         guard abs(width - requestedViewport.width) > 2 || abs(height - requestedViewport.height) > 2 else { return }
         // The bundled MoltenVK context has no resize event handler. Recreate only the
@@ -423,11 +461,18 @@ final class PlayerEngine: NSObject, ObservableObject {
             return
         }
         worker.async { [self] in
+            guard applicationActive else { return }
             if flag("eof-reached") { command(["seek", "0", "absolute"]); setString("pause", "no") }
             else { setString("pause", flag("pause") ? "no" : "yes") }
         }
     }
-    func setPaused(_ paused: Bool) { if let nativePlayback { nativePlayback.setPlaybackWanted(!paused, speed: speed); return }; worker.async { [self] in setString("pause", paused ? "yes" : "no") } }
+    func setPaused(_ paused: Bool) {
+        if let nativePlayback { nativePlayback.setPlaybackWanted(!paused, speed: speed); return }
+        worker.async { [self] in
+            setString("pause", paused || !applicationActive ? "yes" : "no")
+            if paused { resumeAfterInactivity = false }
+        }
+    }
     func seek(_ time: Double) {
         var target = max(0, time)
         if let a = loopA, let b = loopB { target = min(max(target, a), max(a, b - 0.05)) }
@@ -576,7 +621,7 @@ final class PlayerEngine: NSObject, ObservableObject {
             #endif
             case MPV_EVENT_FILE_LOADED:
                 if restorePosition > 0 { command(["seek", String(restorePosition), "absolute+exact"]) }
-                setString("pause", restorePaused ? "yes" : "no")
+                setString("pause", restorePaused || !applicationActive || nativeOutputSuspended ? "yes" : "no")
                 for url in openedExternalSubtitles {
                     command(["sub-add", smbStreams.mediaPath(url), "auto"])
                 }
